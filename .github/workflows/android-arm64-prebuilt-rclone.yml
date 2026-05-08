@@ -1,0 +1,138 @@
+name: Android ARM64 APK with Prebuilt rclone(1.74.0)
+
+on:
+  workflow_dispatch:
+    inputs:
+      rclone_download_url:
+        description: 'Prebuilt rclone Android arm64 gzip URL'
+        required: false
+        default: 'https://beta.rclone.org/v1.74.0/testbuilds/rclone-android-21-armv8a.gz'
+
+jobs:
+  build-arm64-apk:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x gradlew
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Download prebuilt rclone
+        shell: bash
+        env:
+          RCLONE_DOWNLOAD_URL: ${{ github.event.inputs.rclone_download_url || 'https://beta.rclone.org/v1.74.0/testbuilds/rclone-android-21-armv8a.gz' }}
+        run: |
+          echo "Downloading prebuilt rclone from: ${RCLONE_DOWNLOAD_URL}"
+          curl --fail --location --retry 3 \
+            --output rclone/rclone-android-21-armv8a.gz \
+            "${RCLONE_DOWNLOAD_URL}"
+          gzip -dc rclone/rclone-android-21-armv8a.gz > rclone/librclone.so
+          chmod 755 rclone/librclone.so
+          test -f rclone/librclone.so
+          file rclone/librclone.so
+          file rclone/librclone.so | grep -q 'ARM aarch64'
+
+      - name: Create prebuilt-rclone and signing Gradle init script
+        shell: bash
+        run: |
+          cat > prebuilt-rclone.init.gradle <<'EOF'
+          gradle.beforeProject { project ->
+              if (project.path == ':app') {
+                  project.plugins.withId('com.android.application') {
+                      project.extensions.getByName('androidComponents').finalizeDsl { android ->
+                          def signingFile = new File(gradle.rootProject.projectDir, 'TestKey.jks')
+                          if (!signingFile.exists()) {
+                              throw new GradleException("Missing signing keystore: ${signingFile}")
+                          }
+                          android.signingConfigs.release.storeFile = signingFile
+                          android.signingConfigs.release.keyAlias = 'Test'
+                          android.signingConfigs.release.storePassword = '123321'
+                          android.signingConfigs.release.keyPassword = '123321'
+                          println "Using release signing keystore: ${signingFile}"
+                      }
+                  }
+              }
+          }
+
+          gradle.projectsEvaluated {
+              def root = gradle.rootProject
+              def rcloneProject = root.findProject(':rclone')
+              if (rcloneProject == null) {
+                  throw new GradleException("Project ':rclone' was not found")
+              }
+
+              def prebuilt = new File(root.projectDir, 'rclone/librclone.so')
+              def outputDir = new File(root.projectDir, 'app/lib/arm64-v8a')
+              def output = new File(outputDir, 'librclone.so')
+
+              def copyPrebuiltRclone = {
+                  if (!prebuilt.exists()) {
+                      throw new GradleException("Missing prebuilt rclone binary: ${prebuilt}")
+                  }
+                  outputDir.mkdirs()
+                  root.copy {
+                      from prebuilt
+                      into outputDir
+                      rename { 'librclone.so' }
+                  }
+                  println "Using prebuilt rclone: ${prebuilt} -> ${output}"
+              }
+
+              ['createRcloneModule', 'checkoutRclone', 'buildArm', 'buildx86', 'buildx64'].each { taskName ->
+                  def task = rcloneProject.tasks.findByName(taskName)
+                  if (task != null) {
+                      task.enabled = false
+                  }
+              }
+
+              def buildArm64 = rcloneProject.tasks.findByName('buildArm64')
+              if (buildArm64 == null) {
+                  throw new GradleException("Task ':rclone:buildArm64' was not found")
+              }
+              buildArm64.setDependsOn([])
+              buildArm64.actions.clear()
+              buildArm64.doLast {
+                  copyPrebuiltRclone()
+              }
+
+              def buildAll = rcloneProject.tasks.findByName('buildAll')
+              if (buildAll != null) {
+                  buildAll.setDependsOn([buildArm64])
+                  buildAll.actions.clear()
+                  buildAll.doLast {
+                      if (!output.exists()) {
+                          throw new GradleException("Prebuilt rclone was not copied to ${output}")
+                      }
+                  }
+              }
+          }
+          EOF
+
+      - name: Build OSS release APK
+        run: ./gradlew assembleOssRelease -PtargetAbi=arm64-v8a --init-script prebuilt-rclone.init.gradle
+
+      - name: Collect arm64-v8a APK
+        shell: bash
+        run: |
+          mkdir -p dist
+          find app/build/outputs/apk -type f -name '*arm64-v8a*release*.apk' -exec cp {} dist/ \;
+          test -n "$(find dist -maxdepth 1 -type f -name '*.apk')"
+
+      - name: Upload arm64-v8a APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-arm64-v8a-prebuilt-rclone-apk
+          path: dist/*.apk
+          if-no-files-found: error

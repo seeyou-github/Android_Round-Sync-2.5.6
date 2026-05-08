@@ -96,25 +96,22 @@ class ReportNotifications(var mContext: Context) {
     }
 
     private fun getReportLine(title: String, line: String): String {
-        val compactLine = line.lines()
+        val reportLines = line.lines()
             .map { it.trim() }
             .filter { it.isNotEmpty() }
-            .joinToString(" ")
-        if (compactLine.contains(title)) {
-            return "$compactLine\n"
+        if (reportLines.any { it.contains(title) }) {
+            return reportLines.joinToString(System.lineSeparator()) + System.lineSeparator()
         }
-        return "$title: $compactLine\n"
+        return "$title:${System.lineSeparator()}" + reportLines.joinToString(System.lineSeparator()) + System.lineSeparator()
     }
 
     private fun mergeReportLine(title: String, content: String, currentContent: String): String {
         val prefix = "$title: "
-        val remainingContent = currentContent.lines()
-            .map { it.trim() }
-            .filter {
-                it.isNotEmpty()
-                        && !it.startsWith(prefix)
-                        && !it.contains(title)
-                        && isCurrentSyncReportLine(it)
+        val remainingContent = splitReportBlocks(currentContent)
+            .filter { block ->
+                block.isNotBlank()
+                        && !block.lines().any { it.startsWith(prefix) || it.contains(title) }
+                        && block.lines().any { isCurrentSyncReportLine(it) }
             }
             .joinToString(System.lineSeparator())
         return if (remainingContent.isEmpty()) {
@@ -130,6 +127,31 @@ class ReportNotifications(var mContext: Context) {
                 || line.contains(mContext.getString(R.string.sync_log_notification_download_count_prefix))
                 || line.contains(mContext.getString(R.string.sync_log_notification_remote_delete_count_prefix))
                 || line.contains(mContext.getString(R.string.sync_log_notification_local_delete_count_prefix))
+    }
+
+    private fun splitReportBlocks(content: String): List<String> {
+        val blocks = ArrayList<String>()
+        val current = ArrayList<String>()
+        content.lines()
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .forEach { line ->
+                val startsNewBlock = isReportBlockHeader(line)
+                if (startsNewBlock && current.isNotEmpty() && current.any { isCurrentSyncReportLine(it) }) {
+                    blocks.add(current.joinToString(System.lineSeparator()))
+                    current.clear()
+                }
+                current.add(line)
+            }
+        if (current.isNotEmpty()) {
+            blocks.add(current.joinToString(System.lineSeparator()))
+        }
+        return blocks
+    }
+
+    private fun isReportBlockHeader(line: String): Boolean {
+        val localizedTaskPrefix = mContext.getString(R.string.sync_log_task_prefix, "").trim()
+        return line.startsWith(localizedTaskPrefix) || line.endsWith(":")
     }
 
 

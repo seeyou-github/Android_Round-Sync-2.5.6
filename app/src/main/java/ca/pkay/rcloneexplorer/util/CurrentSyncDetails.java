@@ -26,6 +26,7 @@ import java.util.Locale;
 public class CurrentSyncDetails {
 
     private static final int MAX_LINES = 1200;
+    private static final String SUMMARY_SEPARATOR = "---------------";
     private static final StringBuilder SESSION_LOG = new StringBuilder();
     private static final LinkedHashMap<String, TaskLog> TASK_LOGS = new LinkedHashMap<>();
     private static int activeTasks = 0;
@@ -277,8 +278,10 @@ public class CurrentSyncDetails {
 
     private static void appendTaskSummary(Context context, TaskLog taskLog) {
         appendSummaryLine(context, taskLog, "");
+        appendSummaryLine(context, taskLog, SUMMARY_SEPARATOR);
         if (isNoWork(taskLog)) {
             appendSummaryLine(context, taskLog, context.getString(R.string.sync_log_summary_no_work, taskLog.taskName));
+            appendSummaryLine(context, taskLog, SUMMARY_SEPARATOR);
             return;
         }
         appendSummaryLine(context, taskLog, getSummaryHeader(context, taskLog));
@@ -302,6 +305,7 @@ public class CurrentSyncDetails {
             appendSummaryLine(context, taskLog, context.getString(R.string.sync_log_local_delete_list));
             appendChanges(context, taskLog, taskLog.localDeletes, false);
         }
+        appendSummaryLine(context, taskLog, SUMMARY_SEPARATOR);
     }
 
     private static boolean isNoWork(TaskLog taskLog) {

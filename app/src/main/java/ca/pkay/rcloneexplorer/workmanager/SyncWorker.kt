@@ -204,7 +204,7 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
                             notificationTitle,
                             notificationContent,
                             statusObject.getTaskTransferNotificationLines(mTitle, mTask.direction),
-                            statusObject.notificationPercent,
+                            statusObject.getTaskTransferNotificationPercent(),
                             ongoingNotificationID,
                             isPaused
                         ))

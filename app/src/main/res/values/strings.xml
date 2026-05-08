@@ -390,7 +390,7 @@
     <string name="sync_notification_task_type_sync_to_local">Sync to local task</string>
     <string name="sync_notification_task_type_copy_to_remote">Copy to remote task</string>
     <string name="sync_notification_task_type_copy_to_local">Copy to local task</string>
-    <string name="sync_notification_task_title">Task: %1$s (%2$s)</string>
+    <string name="sync_notification_task_title">%1$s (%2$s)</string>
     <string name="sync_notification_uploading_file">Uploading: %1$s %2$s/%3$s</string>
     <string name="sync_notification_downloading_file">Downloading: %1$s %2$s/%3$s</string>
     <string name="sync_notification_pending_upload_count">Pending uploads: %1$d</string>
@@ -423,6 +423,7 @@
     <string name="sync_log_notification_remote_delete_count">Deleted remote files: %1$d</string>
     <string name="sync_log_notification_local_delete_count">Deleted local files: %1$d</string>
     <string name="sync_log_notification_no_work">No sync needed for this task</string>
+    <string name="sync_log_summary_no_work">Task: %1$s no sync needed</string>
     <plurals name="modern_prettyprint_duration_d">
         <item quantity="one">%s Day</item>
         <item quantity="other">%s Days</item>

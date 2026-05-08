@@ -96,7 +96,6 @@ class StatusObject(var mContext: Context){
 
     fun getTaskTransferNotificationLines(taskName: String, direction: Int): ArrayList<String> {
         val lines = ArrayList<String>()
-        lines.add(getTaskTransferNotificationTitle(taskName, direction))
 
         val transfers = mStats.optJSONArray("transferring")
         val transferObject = if (transfers != null && transfers.length() > 0) transfers.optJSONObject(0) else null
@@ -151,11 +150,20 @@ class StatusObject(var mContext: Context){
 
     fun getTaskTransferNotificationContent(taskName: String, direction: Int): String {
         val lines = getTaskTransferNotificationLines(taskName, direction)
-        return if (lines.size > 1) {
-            lines[1]
-        } else {
+        return if (lines.isNotEmpty()) {
             lines[0]
+        } else {
+            getTaskTransferNotificationTitle(taskName, direction)
         }
+    }
+
+    fun getTaskTransferNotificationPercent(): Int {
+        val totalBytes = mStats.optLong("totalBytes", 0)
+        if (totalBytes <= 0L) {
+            return notificationPercent.coerceIn(0, 100)
+        }
+        val bytes = mStats.optLong("bytes", 0).coerceIn(0L, totalBytes)
+        return ((bytes.toDouble() / totalBytes.toDouble()) * 100).toInt().coerceIn(0, 100)
     }
 
     fun getDeletions(): Int {

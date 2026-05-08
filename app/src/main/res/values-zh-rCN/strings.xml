@@ -376,7 +376,7 @@
     <string name="sync_notification_task_type_sync_to_local">同步到本地任务</string>
     <string name="sync_notification_task_type_copy_to_remote">复制到远程任务</string>
     <string name="sync_notification_task_type_copy_to_local">复制到本地任务</string>
-    <string name="sync_notification_task_title">任务名称：%1$s（%2$s）</string>
+    <string name="sync_notification_task_title">%1$s（%2$s）</string>
     <string name="sync_notification_uploading_file">正在上传：%1$s %2$s/%3$s</string>
     <string name="sync_notification_downloading_file">正在下载：%1$s %2$s/%3$s</string>
     <string name="sync_notification_pending_upload_count">待上传文件数量：%1$d</string>
@@ -409,6 +409,7 @@
     <string name="sync_log_notification_remote_delete_count">删除远程文件数量：%1$d</string>
     <string name="sync_log_notification_local_delete_count">删除本地文件数量：%1$d</string>
     <string name="sync_log_notification_no_work">本任务无需同步</string>
+    <string name="sync_log_summary_no_work">任务名称：%1$s 本次无需同步</string>
     <string name="abi_not_supported_arm_downgrade">不幸的是，此 Round Sync 版本与您的设备不兼容。试试 armeabi-v7a 的 APK， 从 github.com/newhinton/Round-Sync/releases/latest 下载。</string>
     <string name="abi_not_supported">您的设备不支持此版本的 Round Sync。</string>
     <string name="trigger">触发器</string>

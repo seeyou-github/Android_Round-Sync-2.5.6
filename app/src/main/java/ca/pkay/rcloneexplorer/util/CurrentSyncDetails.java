@@ -277,6 +277,10 @@ public class CurrentSyncDetails {
 
     private static void appendTaskSummary(Context context, TaskLog taskLog) {
         appendSummaryLine(context, taskLog, "");
+        if (isNoWork(taskLog)) {
+            appendSummaryLine(context, taskLog, context.getString(R.string.sync_log_summary_no_work, taskLog.taskName));
+            return;
+        }
         appendSummaryLine(context, taskLog, getSummaryHeader(context, taskLog));
         if (!taskLog.uploads.isEmpty()) {
             appendSummaryLine(context, taskLog, "");
@@ -298,6 +302,13 @@ public class CurrentSyncDetails {
             appendSummaryLine(context, taskLog, context.getString(R.string.sync_log_local_delete_list));
             appendChanges(context, taskLog, taskLog.localDeletes, false);
         }
+    }
+
+    private static boolean isNoWork(TaskLog taskLog) {
+        return taskLog.uploads.isEmpty()
+                && taskLog.downloads.isEmpty()
+                && taskLog.remoteDeletes.isEmpty()
+                && taskLog.localDeletes.isEmpty();
     }
 
     private static void appendChanges(Context context, TaskLog taskLog, ArrayList<FileChange> changes, boolean includeSizeAndType) {

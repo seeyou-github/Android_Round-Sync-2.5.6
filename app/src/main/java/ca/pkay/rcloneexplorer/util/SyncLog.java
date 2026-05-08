@@ -39,6 +39,9 @@ public class SyncLog {
     public static ArrayList<JSONObject> getLog(Context c){
         File log = new File(c.getFilesDir().getPath() + "/sync.log");
         StringBuilder file = new StringBuilder();
+        if (!log.exists()) {
+            return new ArrayList<>();
+        }
         try {
             char[] buffer = new char[4096];
             InputStream inputStream = new FileInputStream(log);

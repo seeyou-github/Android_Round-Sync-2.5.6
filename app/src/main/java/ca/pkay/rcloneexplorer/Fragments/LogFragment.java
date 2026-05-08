@@ -51,7 +51,16 @@ public class LogFragment extends Fragment {
         populateLogs(fragmentView);
     }
 
+    public void refreshLogs() {
+        if (fragmentView != null) {
+            populateLogs(fragmentView);
+        }
+    }
+
     private void populateLogs(View v){
+        if (v == null) {
+            return;
+        }
         Context c = v.getContext();
 
         RecyclerView recyclerView =  v.findViewById(R.id.log_list);

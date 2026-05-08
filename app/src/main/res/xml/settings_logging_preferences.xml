@@ -2,6 +2,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <PreferenceCategory android:title="@string/preference_category_header_logging">
 
+        <Preference
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:key="@string/pref_key_log_location_uri"
+            android:title="@string/log_location_title"
+            app:summary="@string/log_location_not_set" />
+
         <SwitchPreference
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

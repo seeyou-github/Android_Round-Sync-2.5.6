@@ -2,6 +2,8 @@ package ca.pkay.rcloneexplorer.RecyclerViewAdapters;
 
 
 import android.content.Context;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.icu.text.DateFormat;
 import android.os.Build;
 import android.text.format.DateUtils;
@@ -55,18 +57,22 @@ public class LogRecyclerViewAdapter extends RecyclerView.Adapter<LogRecyclerView
             String timeFormattedHuman = DateUtils.getRelativeTimeSpanString(timestamp).toString();
 
             String text = selectedTrigger.getString(SyncLog.TITLE);
+            String details = selectedTrigger.getString(SyncLog.CONTENT);
             holder.logtitle.setText(text);
-            holder.logtitle.setOnClickListener(v -> {
-                Toasty.info(v.getContext(), text).show();
-            });
-            holder.logdetails.setText(selectedTrigger.getString(SyncLog.CONTENT));
+            holder.logdetails.setText(details);
             holder.logdate.setText(timeFormattedHuman);
 
             //required to make timeFormattedFull final, otherwise the lamda throws errors.
             //Can be removed when SimpleDateFormat in Line is dropped with the support for <21
             String timeFormattedFullFinal = timeFormattedFull;
             holder.log_item_frame.setOnClickListener(v -> {
-                Toasty.info(v.getContext(), timeFormattedFullFinal).show();
+                Context context = v.getContext();
+                ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+                if (clipboard != null) {
+                    String logText = timeFormattedFullFinal + "\n" + text + "\n" + details;
+                    clipboard.setPrimaryClip(ClipData.newPlainText(context.getString(R.string.log_entry_clipboard_label), logText));
+                    Toasty.info(context, context.getString(R.string.log_entry_copied)).show();
+                }
             });
 
 

@@ -147,10 +147,7 @@ public class Log2File {
             }
         }
 
-        File logFile = getPrivateLogFile(context, fileName);
-        if (logFile.exists()) {
-            logFile.delete();
-        }
+        deleteMatchingPrivateLogFiles(context, fileName);
     }
 
     private static boolean hasPersistedWritePermission(Context context, Uri uri) {
@@ -177,6 +174,11 @@ public class Log2File {
     }
 
     private static File getPrivateLogFile(Context context, String fileName) {
+        File path = getPrivateLogDirectory(context);
+        return new File(path, fileName);
+    }
+
+    private static File getPrivateLogDirectory(Context context) {
         File path = context.getExternalFilesDir("logs");
         if (path == null) {
             path = context.getFilesDir();
@@ -184,7 +186,20 @@ public class Log2File {
         if (!path.exists()) {
             path.mkdirs();
         }
-        return new File(path, fileName);
+        return path;
+    }
+
+    private static void deleteMatchingPrivateLogFiles(Context context, String fileName) {
+        File directory = getPrivateLogDirectory(context);
+        File[] files = directory.listFiles();
+        if (files == null) {
+            return;
+        }
+        for (File file : files) {
+            if (isMatchingLogFileName(file.getName(), fileName)) {
+                file.delete();
+            }
+        }
     }
 
     private static void writeToTree(Context context, Uri treeUri, String fileName, String logMessage) throws IOException {

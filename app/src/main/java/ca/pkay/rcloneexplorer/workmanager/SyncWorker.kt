@@ -85,13 +85,6 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
 
 
     override fun doWork(): Result {
-        FLog.e(TAG, "doWork start: workId=%s ongoingNotificationId=%d resultNotificationId=%d inputKeys=%s",
-            id.toString(),
-            ongoingNotificationID,
-            resultNotificationID,
-            inputData.keyValueMap.keys.toString()
-        )
-
         prepareNotifications()
         registerBroadcastReceivers()
 
@@ -125,48 +118,25 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
 
         if (ephemeralTask != null) {
             mTask = ephemeralTask
-            FLog.e(TAG, "doWork task resolved: taskId=%d title=%s direction=%d", mTask.id, mTask.title, mTask.direction)
             handleTask()
-            FLog.e(TAG, "doWork task handled: taskId=%d failureReason=%s endNotificationAlreadyPosted=%s",
-                mTask.id,
-                failureReason.name,
-                endNotificationAlreadyPosted.toString()
-            )
             postSync()
         } else {
-            FLog.e(TAG, "doWork no task resolved; posting failure notification")
             failureReason = FAILURE_REASON.NO_TASK
             postSync()
             return Result.failure()
         }
 
         // Indicate whether the work finished successfully with the Result
-        FLog.e(TAG, "doWork end: task=%s failureReason=%s endNotificationAlreadyPosted=%s",
-            mTitle,
-            failureReason.name,
-            endNotificationAlreadyPosted.toString()
-        )
         return Result.success()
     }
 
     override fun onStopped() {
         super.onStopped()
-        FLog.e(TAG, "onStopped: task=%s currentFailureReason=%s endNotificationAlreadyPosted=%s",
-            mTitle,
-            failureReason.name,
-            endNotificationAlreadyPosted.toString()
-        )
         failureReason = FAILURE_REASON.CANCELLED
         finishWork()
     }
 
     private fun finishWork() {
-        FLog.e(TAG, "finishWork: task=%s processAlive=%s syncLogFinished=%s endNotificationAlreadyPosted=%s",
-            mTitle,
-            (sRcloneProcess != null).toString(),
-            syncLogFinished.toString(),
-            endNotificationAlreadyPosted.toString()
-        )
         sRcloneProcess?.destroy()
         try {
             mContext.unregisterReceiver(connectivityChangeBroadcastReceiver)
@@ -186,14 +156,6 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
         if (mTask.title == "") {
             mTitle = mTask.remotePath
         }
-        FLog.e(TAG, "handleTask start: taskId=%d title=%s direction=%d localPath=%s remotePath=%s remoteId=%d",
-            mTask.id,
-            mTitle,
-            mTask.direction,
-            mTask.localPath,
-            mTask.remotePath,
-            mTask.remoteId
-        )
         CurrentSyncDetails.startTask(mContext, mTitle, mTask.direction, mTask.localPath)
         updateForegroundNotification(mNotificationManager.updateSyncNotification(
             statusObject.getTaskTransferNotificationTitle(mTitle, mTask.direction),
@@ -204,11 +166,6 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
             isPaused
         ))
         val preconditionsMet = arePreconditionsMet()
-        FLog.e(TAG, "handleTask preconditions: task=%s met=%s failureReason=%s",
-            mTitle,
-            preconditionsMet.toString(),
-            failureReason.name
-        )
         if(preconditionsMet) {
             sRcloneProcess = mRclone.sync(
                 remoteItem,
@@ -217,15 +174,12 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
                 mTask.direction,
                 mTask.md5sum
             )
-            FLog.e(TAG, "handleTask rclone started: task=%s processCreated=%s", mTitle, (sRcloneProcess != null).toString())
             handleSync(mTitle)
-            FLog.e(TAG, "handleTask sync completed: task=%s sending upload finished broadcast", mTitle)
             sendUploadFinishedBroadcast(remoteItem.name, mTask.remotePath)
         }
     }
 
     private fun handleSync(title: String) {
-        FLog.e(TAG, "handleSync start: task=%s hasProcess=%s", title, (sRcloneProcess != null).toString())
         if (sRcloneProcess != null) {
             val localProcessReference = sRcloneProcess!!
             try {
@@ -267,7 +221,6 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
             }
             try {
                 localProcessReference.waitFor()
-                FLog.e(TAG, "handleSync process finished: task=%s exitCode=%d", title, localProcessReference.exitValue())
                 CurrentSyncDetails.appendTaskLine(mContext, mTitle, "rclone exit code: ${localProcessReference.exitValue()}")
             } catch (e: InterruptedException) {
                 FLog.e(TAG, "onHandleIntent: error waiting for process", e)
@@ -276,24 +229,14 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
             log("Sync: No Rclone Process!")
         }
         finishSyncLog()
-        FLog.e(TAG, "handleSync cancel ongoing notification: task=%s ongoingNotificationId=%d", title, ongoingNotificationID)
         mNotificationManager.cancelSyncNotification(ongoingNotificationID)
     }
 
     private fun postSync() {
-        FLog.e(TAG, "postSync enter: task=%s failureReason=%s endNotificationAlreadyPosted=%s silentRun=%s resultNotificationId=%d",
-            mTitle,
-            failureReason.name,
-            endNotificationAlreadyPosted.toString(),
-            silentRun.toString(),
-            resultNotificationID
-        )
         if (endNotificationAlreadyPosted) {
-            FLog.e(TAG, "postSync skip: notification already posted for task=%s", mTitle)
             return
         }
         if (silentRun) {
-            FLog.e(TAG, "postSync skip: silent run for task=%s", mTitle)
             return
         }
 
@@ -302,13 +245,11 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
         var content = mContext.getString(R.string.operation_failed_unknown, mTitle)
         when (failureReason) {
             FAILURE_REASON.NO_FAILURE -> {
-                FLog.e(TAG, "postSync success branch: task=%s notificationId=%d", mTitle, notificationId)
                 showSuccessNotification(notificationId)
                 endNotificationAlreadyPosted = true
                 return
             }
             FAILURE_REASON.CANCELLED -> {
-                FLog.e(TAG, "postSync cancelled branch: task=%s notificationId=%d", mTitle, notificationId)
                 showCancelledNotification(notificationId)
                 endNotificationAlreadyPosted = true
                 return
@@ -329,7 +270,6 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
                 content = mContext.getString(R.string.operation_failed_unknown_rclone_error, mTitle)
             }
         }
-        FLog.e(TAG, "postSync failure branch: task=%s notificationId=%d content=%s", mTitle, notificationId, content)
         showFailNotification(notificationId, content)
         endNotificationAlreadyPosted = true
         finishWork()
@@ -345,11 +285,6 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
 
     private fun showSuccessNotification(notificationId: Int) {
         val message = CurrentSyncDetails.getNotificationSummary(mContext, mTitle)
-        FLog.e(TAG, "showSuccessNotification: task=%s notificationId=%d message=%s",
-            mTitle,
-            notificationId,
-            message.replace("\n", " | ")
-        )
         mNotificationManager.showSuccessNotificationOrReport(
             mTitle,
             message,
@@ -433,7 +368,6 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
     // ongoing notification.
     private fun updateForegroundNotification(notification: Notification?) {
         notification?.let {
-            FLog.e(TAG, "updateForegroundNotification: task=%s ongoingNotificationId=%d", mTitle, ongoingNotificationID)
             setForegroundAsync(ForegroundInfo(ongoingNotificationID, it, FOREGROUND_SERVICE_TYPE_DATA_SYNC))
         }
     }

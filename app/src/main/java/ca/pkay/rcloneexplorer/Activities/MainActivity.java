@@ -568,12 +568,12 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onOtherTriggersSelected() {
-        startTriggerFragment();
+        startActivity(new Intent(this, TriggerListActivity.class));
     }
 
     @Override
     public void onOtherLogsSelected() {
-        startLogFragment();
+        startActivity(new Intent(this, LogActivity.class));
     }
 
     private void warnUserAboutOverwritingConfiguration() {

@@ -301,6 +301,8 @@ public class FileExplorerFragment extends Fragment implements   FileExplorerRecy
 
         fab = view.findViewById(R.id.fab_fragment_file_explorer_list);
         fab.setOverlayLayout((SpeedDialOverlayLayout)view.findViewById(R.id.fab_overlay));
+        fab.hide();
+        fab.setVisibility(View.GONE);
         fab.setOnActionSelectedListener(actionItem -> {
             switch (actionItem.getId()) {
                 case R.id.fab_add_folder:
@@ -440,7 +442,7 @@ public class FileExplorerFragment extends Fragment implements   FileExplorerRecy
             ((FragmentActivity) context).setTitle(getString(R.string.select_destination));
             ((FragmentActivity) context).findViewById(R.id.move_bar).setVisibility(View.VISIBLE);
             fab.hide();
-            fab.setVisibility(View.INVISIBLE);
+            fab.setVisibility(View.GONE);
             setFabBehaviour(false);
         }
         downloadList = savedInstanceState.getParcelableArrayList(SAVED_DOWNLOAD_LIST);
@@ -897,8 +899,8 @@ public class FileExplorerFragment extends Fragment implements   FileExplorerRecy
         recyclerViewAdapter.setMoveMode(false);
         isInMoveMode = false;
         hideMoveBar();
-        fab.show();
-        fab.setVisibility(View.VISIBLE);
+        fab.hide();
+        fab.setVisibility(View.GONE);
         setFabBehaviour(true);
         showNavDrawerButtonInToolbar();
         setOptionsMenuVisibility(true);
@@ -929,8 +931,8 @@ public class FileExplorerFragment extends Fragment implements   FileExplorerRecy
     private void moveLocationSelected() {
         setTitle();
         hideMoveBar();
-        fab.show();
-        fab.setVisibility(View.VISIBLE);
+        fab.hide();
+        fab.setVisibility(View.GONE);
         setFabBehaviour(true);
         setOptionsMenuVisibility(true);
         recyclerViewAdapter.setMoveMode(false);
@@ -1136,7 +1138,8 @@ public class FileExplorerFragment extends Fragment implements   FileExplorerRecy
             return false;
         }
         if (!isInMoveMode && !recyclerViewAdapter.isInSelectMode()) {
-            fab.show();
+            fab.hide();
+            fab.setVisibility(View.GONE);
         }
         if (fetchDirectoryTask != null) {
             fetchDirectoryTask.cancel(true);
@@ -1192,7 +1195,8 @@ public class FileExplorerFragment extends Fragment implements   FileExplorerRecy
         swipeRefreshLayout.setRefreshing(true);
         pathStack.push(directoryObject.getCurrentPath());
         if (!isInMoveMode && !recyclerViewAdapter.isInSelectMode()) {
-            fab.show();
+            fab.hide();
+            fab.setVisibility(View.GONE);
         }
 
         if (isSearchMode) {
@@ -1233,7 +1237,7 @@ public class FileExplorerFragment extends Fragment implements   FileExplorerRecy
             ((FragmentActivity) context).setTitle(numOfSelected + " " + getString(R.string.selected));
             showBottomBar();
             fab.hide();
-            fab.setVisibility(View.INVISIBLE);
+            fab.setVisibility(View.GONE);
             setFabBehaviour(false);
             setOptionsMenuVisibility(false);
             showCancelButtonInToolbar();
@@ -1252,8 +1256,8 @@ public class FileExplorerFragment extends Fragment implements   FileExplorerRecy
         if (!isInMoveMode && !recyclerViewAdapter.isInSelectMode()) {
             setTitle();
             hideBottomBar();
-            fab.show();
-            fab.setVisibility(View.VISIBLE);
+            fab.hide();
+            fab.setVisibility(View.GONE);
             setFabBehaviour(true);
             setOptionsMenuVisibility(true);
             showNavDrawerButtonInToolbar();
@@ -1365,7 +1369,8 @@ public class FileExplorerFragment extends Fragment implements   FileExplorerRecy
             searchClicked();
         }
         if (!isInMoveMode && !recyclerViewAdapter.isInSelectMode()) {
-            fab.show();
+            fab.hide();
+            fab.setVisibility(View.GONE);
         }
         if (directoryObject.getCurrentPath().equals(path)) {
             return;
@@ -1507,7 +1512,7 @@ public class FileExplorerFragment extends Fragment implements   FileExplorerRecy
         ((FragmentActivity) context).findViewById(R.id.move_bar).setVisibility(View.VISIBLE);
         setOptionsMenuVisibility(false);
         fab.hide();
-        fab.setVisibility(View.INVISIBLE);
+        fab.setVisibility(View.GONE);
         setFabBehaviour(false);
     }
 

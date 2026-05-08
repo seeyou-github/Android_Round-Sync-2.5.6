@@ -41,6 +41,8 @@
                     android:layout_weight="1"
                     android:gravity="center_vertical"
                     android:includeFontPadding="false"
+                    android:ellipsize="end"
+                    android:singleLine="true"
                     android:text="@string/remotes"
                     android:textColor="?attr/colorOnSurface"
                     android:textSize="22sp"
@@ -127,7 +129,7 @@
     <LinearLayout
         android:id="@+id/main_bottom_nav"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
+        android:layout_height="52dp"
         android:layout_gravity="bottom"
         android:background="?attr/colorSurfaceVariant"
         android:baselineAligned="false"
@@ -139,9 +141,10 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:gravity="center"
+            android:includeFontPadding="false"
             android:text="@string/tasks"
             android:textColor="?attr/colorOnSurfaceVariant"
-            android:textSize="20sp"
+            android:textSize="18sp"
             android:textStyle="bold" />
 
         <TextView
@@ -150,9 +153,10 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:gravity="center"
+            android:includeFontPadding="false"
             android:text="@string/remotes"
             android:textColor="?attr/colorOnSurfaceVariant"
-            android:textSize="20sp"
+            android:textSize="18sp"
             android:textStyle="bold" />
 
         <TextView
@@ -161,9 +165,10 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:gravity="center"
+            android:includeFontPadding="false"
             android:text="@string/other"
             android:textColor="?attr/colorOnSurfaceVariant"
-            android:textSize="20sp"
+            android:textSize="18sp"
             android:textStyle="bold" />
     </LinearLayout>
 

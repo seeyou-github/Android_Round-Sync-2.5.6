@@ -58,6 +58,7 @@
                     android:clickable="true"
                     android:contentDescription="@string/add_task"
                     android:focusable="true"
+                    android:visibility="gone"
                     android:src="@drawable/ic_add" />
 
                 <Space
@@ -112,6 +113,7 @@
                     android:clickable="true"
                     android:contentDescription="@string/add_trigger"
                     android:focusable="true"
+                    android:visibility="gone"
                     android:src="@drawable/ic_add" />
 
                 <Space
@@ -141,12 +143,13 @@
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/newTrigger"
-            android:layout_width="358dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="@dimen/activity_vertical_margin"
             android:layout_marginBottom="@dimen/activity_horizontal_margin"
             android:clickable="true"
             android:focusable="true"
+            android:visibility="gone"
             android:src="@drawable/ic_add"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />

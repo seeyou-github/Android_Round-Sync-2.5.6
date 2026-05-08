@@ -215,6 +215,14 @@
         <activity
             android:name=".Activities.TriggerActivity"
             android:label="@string/title_activity_trigger"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".Activities.TriggerListActivity"
+            android:label="@string/trigger"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".Activities.LogActivity"
+            android:label="@string/logFragment"
             android:theme="@style/AppTheme.NoActionBar" /> <!-- Auto Language Generation -->
         <service
             android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"

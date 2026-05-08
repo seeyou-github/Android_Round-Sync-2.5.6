@@ -336,6 +336,9 @@
     <string name="sync_direction_copy_remote_local">Copy remote to local</string>
     <string name="copy">Copy</string>
     <string name="operation_success">%s sync successful</string>
+    <string name="rclone_sync_log_title">%s rclone sync log</string>
+    <string name="rclone_sync_log_empty">Rclone did not output any sync logs.</string>
+    <string name="rclone_sync_exit_code">rclone exit code: %d</string>
     <string name="operation_success_description_zero">There was nothing to do.</string>
     <plurals name="operation_success_description">
         <item quantity="one">Successfully synced %2$s in %3$d file.</item>

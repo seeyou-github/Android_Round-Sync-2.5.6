@@ -66,7 +66,8 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
     private val mPreferences = PreferenceManager.getDefaultSharedPreferences(mContext)
 
 
-    private var log2File: Log2File? = null
+    private var log2File: Log2File? = Log2File(mContext)
+    private val rcloneSyncLog = StringBuilder()
 
 
 
@@ -170,6 +171,7 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
 
     private fun handleSync(title: String) {
         SyncLog.info(mContext, mTitle, mContext.getString(R.string.operation_start_sync))
+        rcloneSyncLog.setLength(0)
         if (sRcloneProcess != null) {
             val localProcessReference = sRcloneProcess!!
             try {
@@ -177,6 +179,7 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
                 val iterator = reader.lineSequence().iterator()
                 while(iterator.hasNext()) {
                     val line = iterator.next()
+                    appendRcloneSyncLog(line)
                     try {
                         val logline = JSONObject(line)
                         //todo: migrate this to StatusObject, so that we can handle everything properly.
@@ -208,13 +211,37 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
             }
             try {
                 localProcessReference.waitFor()
+                appendRcloneSyncLog(mContext.getString(R.string.rclone_sync_exit_code, localProcessReference.exitValue()))
+                if (localProcessReference.exitValue() != 0) {
+                    failureReason = FAILURE_REASON.RCLONE_ERROR
+                }
             } catch (e: InterruptedException) {
                 FLog.e(TAG, "onHandleIntent: error waiting for process", e)
+                appendRcloneSyncLog(e.toString())
             }
         } else {
             log("Sync: No Rclone Process!")
+            appendRcloneSyncLog("Sync: No Rclone Process!")
+            failureReason = FAILURE_REASON.RCLONE_ERROR
         }
+        writeRcloneSyncLog()
         mNotificationManager.cancelSyncNotification(ongoingNotificationID)
+    }
+
+    private fun appendRcloneSyncLog(line: String) {
+        if (rcloneSyncLog.isNotEmpty()) {
+            rcloneSyncLog.append('\n')
+        }
+        rcloneSyncLog.append(line)
+    }
+
+    private fun writeRcloneSyncLog() {
+        val content = if (rcloneSyncLog.isNotEmpty()) {
+            rcloneSyncLog.toString()
+        } else {
+            mContext.getString(R.string.rclone_sync_log_empty)
+        }
+        SyncLog.info(mContext, mContext.getString(R.string.rclone_sync_log_title, mTitle), content)
     }
 
     private fun postSync() {

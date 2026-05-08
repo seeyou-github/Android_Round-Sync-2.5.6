@@ -11,7 +11,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import ca.pkay.rcloneexplorer.Activities.AboutActivity;
 import ca.pkay.rcloneexplorer.Activities.CurrentSyncDetailsActivity;
 import ca.pkay.rcloneexplorer.Activities.SettingsActivity;
 import ca.pkay.rcloneexplorer.R;
@@ -52,7 +51,6 @@ public class MainOtherFragment extends Fragment {
         view.findViewById(R.id.other_triggers).setOnClickListener(v -> navigationListener.onOtherTriggersSelected());
         view.findViewById(R.id.other_current_sync_details).setOnClickListener(v -> startActivity(new Intent(requireContext(), CurrentSyncDetailsActivity.class)));
         view.findViewById(R.id.other_settings).setOnClickListener(v -> startActivity(new Intent(requireContext(), SettingsActivity.class)));
-        view.findViewById(R.id.other_about).setOnClickListener(v -> startActivity(new Intent(requireContext(), AboutActivity.class)));
 
         return view;
     }

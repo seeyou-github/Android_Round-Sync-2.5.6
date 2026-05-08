@@ -132,6 +132,7 @@
             android:layout_height="56dp"
             android:clickable="true"
             android:focusable="true"
+            android:visibility="gone"
             app:cardCornerRadius="8dp"
             app:cardElevation="0dp">
 

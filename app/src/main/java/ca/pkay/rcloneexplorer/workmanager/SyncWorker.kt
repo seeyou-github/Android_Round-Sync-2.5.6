@@ -74,6 +74,7 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
     private var endNotificationAlreadyPosted = false
     private var silentRun = false
     private var isPaused = false
+    private var syncLogFinished = false
     private val ongoingNotificationID = Random().nextInt()
 
 
@@ -87,8 +88,6 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
 
         prepareNotifications()
         registerBroadcastReceivers()
-        CurrentSyncDetails.clear(mContext)
-        CurrentSyncDetails.append(mContext, getString(R.string.current_sync_details_started))
 
         updateForegroundNotification(mNotificationManager.updateSyncNotification(
             mTitle,
@@ -145,7 +144,7 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
         } catch (e: IllegalArgumentException) {
             FLog.e(TAG, "Receiver already unregistered", e)
         }
-        CurrentSyncDetails.save(mContext)
+        finishSyncLog()
         postSync()
     }
 
@@ -157,6 +156,7 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
         if (mTask.title == "") {
             mTitle = mTask.remotePath
         }
+        CurrentSyncDetails.startTask(mContext, mTitle, mTask.direction, mTask.localPath)
         if(arePreconditionsMet()) {
             sRcloneProcess = mRclone.sync(
                 remoteItem,
@@ -178,7 +178,7 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
                 val iterator = reader.lineSequence().iterator()
                 while(iterator.hasNext()) {
                     val line = iterator.next()
-                    CurrentSyncDetails.appendRcloneLine(mContext, line)
+                    CurrentSyncDetails.appendRcloneLine(mContext, mTitle, mTask.direction, mTask.localPath, line)
                     try {
                         val logline = JSONObject(line)
                         //todo: migrate this to StatusObject, so that we can handle everything properly.
@@ -211,14 +211,14 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
             }
             try {
                 localProcessReference.waitFor()
-                CurrentSyncDetails.append(mContext, "rclone exit code: ${localProcessReference.exitValue()}")
+                CurrentSyncDetails.appendTaskLine(mContext, mTitle, "rclone exit code: ${localProcessReference.exitValue()}")
             } catch (e: InterruptedException) {
                 FLog.e(TAG, "onHandleIntent: error waiting for process", e)
             }
         } else {
             log("Sync: No Rclone Process!")
         }
-        CurrentSyncDetails.save(mContext)
+        finishSyncLog()
         mNotificationManager.cancelSyncNotification(ongoingNotificationID)
     }
 
@@ -273,51 +273,12 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
     }
 
     private fun showSuccessNotification(notificationId: Int) {
-        //Todo: Show sync-errors in notification. Also see line 169
-
-        var message = generateSuccessMessage(statusObject)
+        val message = CurrentSyncDetails.getNotificationSummary(mContext, mTitle)
         mNotificationManager.showSuccessNotificationOrReport(
             mTitle,
             message,
             notificationId
         )
-
-        message += """
-                        
-        Est. Speed: ${statusObject.getEstimatedAverageSpeed()}
-        Avg. Speed: ${statusObject.getLastItemAverageSpeed()}
-                        """.trimIndent()
-    }
-
-    // this is currently only a useless mapper. It is supposed to keep this worker in sync with the ephemeral one.
-    // when they are merged eventually, this can be easily extracted.
-    private fun generateSuccessMessage(statusObject: StatusObject): String {
-        val totalTransfers = statusObject.getTotalTransfers()
-        val deletions = statusObject.getDeletions()
-        val parts = ArrayList<String>()
-        if (totalTransfers > 0) {
-            parts.add(
-                mContext.resources.getQuantityString(
-                    R.plurals.operation_success_description,
-                    totalTransfers,
-                    mTitle,
-                    statusObject.getTotalSize(),
-                    totalTransfers
-                )
-            )
-        }
-        if (deletions > 0) {
-            parts.add(
-                mContext.getString(
-                    R.string.operation_success_description_deletions_prefix,
-                    deletions
-                )
-            )
-        }
-        if (parts.isEmpty()) {
-            parts.add(mContext.resources.getString(R.string.operation_success_description_zero))
-        }
-        return parts.joinToString(System.lineSeparator())
     }
 
     private fun showFailNotification(notificationId: Int, content: String, wasCancelled: Boolean = false) {
@@ -456,19 +417,19 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
     private fun togglePause() {
         val process = sRcloneProcess ?: return
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            CurrentSyncDetails.append(mContext, getString(R.string.sync_pause_not_supported))
+            CurrentSyncDetails.appendTaskLine(mContext, mTitle, getString(R.string.sync_pause_not_supported))
             return
         }
         val processId = getProcessId(process)
         if (processId == null) {
-            CurrentSyncDetails.append(mContext, getString(R.string.sync_pause_not_supported))
+            CurrentSyncDetails.appendTaskLine(mContext, mTitle, getString(R.string.sync_pause_not_supported))
             return
         }
         val signal = if (isPaused) 18 else 19
         AndroidProcess.sendSignal(processId, signal)
         isPaused = !isPaused
         val content = getString(if (isPaused) R.string.sync_paused else R.string.sync_resumed)
-        CurrentSyncDetails.append(mContext, content)
+        CurrentSyncDetails.appendTaskLine(mContext, mTitle, content)
         updateForegroundNotification(mNotificationManager.updateSyncNotification(
             mTitle,
             content,
@@ -496,6 +457,14 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
             FLog.e(TAG, "Could not read process pid field", e)
             null
         }
+    }
+
+    private fun finishSyncLog() {
+        if (syncLogFinished || !::mTask.isInitialized) {
+            return
+        }
+        syncLogFinished = true
+        CurrentSyncDetails.finishTask(mContext, mTitle, mTask.direction, mTask.localPath)
     }
 
 }

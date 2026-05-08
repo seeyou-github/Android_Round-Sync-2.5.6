@@ -12,6 +12,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import ca.pkay.rcloneexplorer.Activities.CurrentSyncDetailsActivity
 import ca.pkay.rcloneexplorer.BroadcastReceivers.ClearReportBroadcastReciever
 import ca.pkay.rcloneexplorer.R
 import ca.pkay.rcloneexplorer.util.NotificationUtils
@@ -85,6 +86,8 @@ class ReportNotifications(var mContext: Context) {
                 )
             )
             .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setContentIntent(createSyncLogIntent(NOTIFICATION_ID_SUCESS_REPORT))
+            .setAutoCancel(true)
             .setDeleteIntent(createDeleteIntent(REPORT_SUCCESS_DELETE_INTENT))
 
         val notificationManager = NotificationManagerCompat.from(mContext)
@@ -97,6 +100,9 @@ class ReportNotifications(var mContext: Context) {
             .map { it.trim() }
             .filter { it.isNotEmpty() }
             .joinToString(" ")
+        if (compactLine.contains(title)) {
+            return "$compactLine\n"
+        }
         return "$title: $compactLine\n"
     }
 
@@ -104,7 +110,11 @@ class ReportNotifications(var mContext: Context) {
         val prefix = "$title: "
         val remainingContent = currentContent.lines()
             .map { it.trim() }
-            .filter { it.isNotEmpty() && it.contains(": ") && !it.startsWith(prefix) }
+            .filter {
+                it.isNotEmpty()
+                        && !it.startsWith(prefix)
+                        && !it.contains(title)
+            }
             .joinToString(System.lineSeparator())
         return if (remainingContent.isEmpty()) {
             content
@@ -161,6 +171,8 @@ class ReportNotifications(var mContext: Context) {
                 )
             )
             .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setContentIntent(createSyncLogIntent(NOTIFICATION_ID_FAIL_REPORT))
+            .setAutoCancel(true)
             .setDeleteIntent(createDeleteIntent(REPORT_FAIL_DELETE_INTENT))
 
         val notificationManager = NotificationManagerCompat.from(mContext)
@@ -177,6 +189,15 @@ class ReportNotifications(var mContext: Context) {
             0,
             intent,
             PendingIntent.FLAG_ONE_SHOT or FLAG_IMMUTABLE
+        )
+    }
+
+    private fun createSyncLogIntent(requestCode: Int): PendingIntent {
+        return PendingIntent.getActivity(
+            mContext,
+            requestCode,
+            Intent(mContext, CurrentSyncDetailsActivity::class.java),
+            PendingIntent.FLAG_UPDATE_CURRENT or FLAG_IMMUTABLE
         )
     }
 

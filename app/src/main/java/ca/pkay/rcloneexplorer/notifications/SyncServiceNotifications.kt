@@ -8,6 +8,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.preference.PreferenceManager
 import androidx.work.WorkManager
+import ca.pkay.rcloneexplorer.Activities.CurrentSyncDetailsActivity
 import ca.pkay.rcloneexplorer.BroadcastReceivers.SyncRestartAction
 import ca.pkay.rcloneexplorer.R
 import ca.pkay.rcloneexplorer.util.FLog
@@ -79,6 +80,7 @@ class SyncServiceNotifications(var mContext: Context) {
         i.putExtra(EXTRA_TASK_ID, taskid)
 
         val retryPendingIntent = PendingIntent.getService(mContext, taskid.toInt(), i, GenericSyncNotification.getFlags())
+        val contentIntent = createSyncLogIntent(notificationId)
         val builder = NotificationCompat.Builder(mContext, CHANNEL_FAIL_ID)
             .setSmallIcon(R.drawable.ic_twotone_cloud_error_24)
             .setContentTitle(mContext.getString(R.string.operation_failed))
@@ -88,6 +90,8 @@ class SyncServiceNotifications(var mContext: Context) {
             )
             .setGroup(OPERATION_FAILED_GROUP)
             .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setContentIntent(contentIntent)
+            .setAutoCancel(true)
             .addAction(
                 R.drawable.ic_refresh,
                 mContext.getString(R.string.retry_failed_sync),
@@ -124,6 +128,7 @@ class SyncServiceNotifications(var mContext: Context) {
         i.putExtra(EXTRA_TASK_ID, taskid)
 
         val retryPendingIntent = PendingIntent.getService(mContext, taskid.toInt(), i, GenericSyncNotification.getFlags())
+        val contentIntent = createSyncLogIntent(notificationId)
         val builder = NotificationCompat.Builder(mContext, CHANNEL_FAIL_ID)
             .setSmallIcon(R.drawable.ic_twotone_cloud_error_24)
             .setContentTitle(mContext.getString(R.string.operation_failed_cancelled))
@@ -133,6 +138,8 @@ class SyncServiceNotifications(var mContext: Context) {
             )
             .setGroup(OPERATION_FAILED_GROUP)
             .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setContentIntent(contentIntent)
+            .setAutoCancel(true)
             .addAction(
                 R.drawable.ic_refresh,
                 mContext.getString(R.string.retry_failed_sync),
@@ -162,6 +169,7 @@ class SyncServiceNotifications(var mContext: Context) {
         }
     }
     fun showSuccessNotification(title: String, content: String, notificationId: Int) {
+        val contentIntent = createSyncLogIntent(notificationId)
         val builder = NotificationCompat.Builder(mContext, CHANNEL_SUCCESS_ID)
             .setSmallIcon(R.drawable.ic_twotone_cloud_done_24)
             .setContentTitle(mContext.getString(R.string.operation_success, title))
@@ -173,7 +181,18 @@ class SyncServiceNotifications(var mContext: Context) {
             )
             .setGroup(OPERATION_SUCCESS_GROUP)
             .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setContentIntent(contentIntent)
+            .setAutoCancel(true)
         NotificationUtils.createNotification(mContext, notificationId, builder.build())
+    }
+
+    private fun createSyncLogIntent(notificationId: Int): PendingIntent {
+        return PendingIntent.getActivity(
+            mContext,
+            notificationId,
+            Intent(mContext, CurrentSyncDetailsActivity::class.java),
+            GenericSyncNotification.getFlags()
+        )
     }
 
     @Deprecated("Use with specific notification id")

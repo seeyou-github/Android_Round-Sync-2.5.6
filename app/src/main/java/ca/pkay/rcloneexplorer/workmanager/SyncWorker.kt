@@ -33,7 +33,6 @@ import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
 import java.io.InterruptedIOException
-import java.util.Random
 
 class SyncWorker (private var mContext: Context, workerParams: WorkerParameters): Worker(mContext, workerParams) {
 
@@ -74,7 +73,9 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
     private var silentRun = false
     private var isPaused = false
     private var syncLogFinished = false
-    private val ongoingNotificationID = Random().nextInt()
+    private val notificationBaseId = stableNotificationBaseId()
+    private val ongoingNotificationID = notificationBaseId
+    private val resultNotificationID = notificationBaseId xor 0x40000000
 
 
     // Task
@@ -238,7 +239,7 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
             return
         }
 
-        val notificationId = System.currentTimeMillis().toInt()
+        val notificationId = resultNotificationID
 
         var content = mContext.getString(R.string.operation_failed_unknown, mTitle)
         when (failureReason) {
@@ -368,6 +369,11 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
         notification?.let {
             setForegroundAsync(ForegroundInfo(ongoingNotificationID, it, FOREGROUND_SERVICE_TYPE_DATA_SYNC))
         }
+    }
+
+    private fun stableNotificationBaseId(): Int {
+        val value = id.hashCode() and 0x3fffffff
+        return if (value == 0) SyncServiceNotifications.PERSISTENT_NOTIFICATION_ID_FOR_SYNC else value
     }
 
 

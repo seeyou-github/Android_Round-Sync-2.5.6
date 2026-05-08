@@ -1,4 +1,4 @@
-﻿package ca.pkay.rcloneexplorer;
+package ca.pkay.rcloneexplorer;
 
 import android.content.Context;
 import android.content.SharedPreferences;

@@ -25,6 +25,7 @@ import jp.wasabeef.recyclerview.animators.LandingAnimator;
 
 public class TriggerFragment extends Fragment {
 
+    private static final String ARG_SHOW_ADD_BUTTON = "show_add_button";
     private View fragmentView;
     private DatabaseHandler dbHandler;
 
@@ -35,6 +36,14 @@ public class TriggerFragment extends Fragment {
 
     public static TriggerFragment newInstance() {
         return new TriggerFragment();
+    }
+
+    public static TriggerFragment newInstance(boolean showAddButton) {
+        TriggerFragment fragment = new TriggerFragment();
+        Bundle args = new Bundle();
+        args.putBoolean(ARG_SHOW_ADD_BUTTON, showAddButton);
+        fragment.setArguments(args);
+        return fragment;
     }
 
     @Override
@@ -54,7 +63,11 @@ public class TriggerFragment extends Fragment {
         updateVisibilities(fragmentView);
 
         Intent newTriggerIntent = new Intent(view.getContext(), TriggerActivity.class);
-        view.findViewById(R.id.newTrigger).setOnClickListener(v -> {
+        View newTriggerButton = view.findViewById(R.id.newTrigger);
+        if (getArguments() != null && getArguments().getBoolean(ARG_SHOW_ADD_BUTTON, false)) {
+            newTriggerButton.setVisibility(View.VISIBLE);
+        }
+        newTriggerButton.setOnClickListener(v -> {
             startActivity(newTriggerIntent);
         });
         view.findViewById(R.id.newTrigger_empty).setOnClickListener(v -> {

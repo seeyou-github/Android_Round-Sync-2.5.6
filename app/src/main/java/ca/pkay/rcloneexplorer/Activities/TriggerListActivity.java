@@ -37,7 +37,7 @@ public class TriggerListActivity extends AppCompatActivity {
         if (savedInstanceState == null) {
             getSupportFragmentManager()
                     .beginTransaction()
-                    .replace(R.id.flFragment, TriggerFragment.newInstance())
+                    .replace(R.id.flFragment, TriggerFragment.newInstance(true))
                     .commit();
         }
     }

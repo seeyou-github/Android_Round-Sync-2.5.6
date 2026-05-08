@@ -307,13 +307,15 @@ public class MainActivity extends AppCompatActivity
         bottomNavTasks.setAlpha(sectionId == R.string.tasks ? 1.0f : 0.55f);
         bottomNavRemotes.setAlpha(sectionId == R.string.remotes ? 1.0f : 0.55f);
         bottomNavOther.setAlpha(sectionId == R.string.other ? 1.0f : 0.55f);
-        mainAddButton.setVisibility(View.VISIBLE);
         if (sectionId == R.string.tasks) {
+            mainAddButton.setVisibility(View.VISIBLE);
             mainAddButton.setOnClickListener(v -> startActivity(new Intent(this, TaskActivity.class)));
         } else if (sectionId == R.string.remotes) {
+            mainAddButton.setVisibility(View.VISIBLE);
             mainAddButton.setOnClickListener(v -> startActivity(new Intent(this, RemoteConfig.class)));
         } else {
-            mainAddButton.setOnClickListener(v -> startActivity(new Intent(this, TriggerActivity.class)));
+            mainAddButton.setVisibility(View.GONE);
+            mainAddButton.setOnClickListener(null);
         }
     }
 

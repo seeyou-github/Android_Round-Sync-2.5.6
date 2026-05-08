@@ -191,7 +191,6 @@ public class RemotesFragment extends Fragment implements RemotesRecyclerViewAdap
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
-        inflater.inflate(R.menu.remote_fragment_menu, menu);
     }
 
     @Override

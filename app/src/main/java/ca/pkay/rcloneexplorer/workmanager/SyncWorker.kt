@@ -7,6 +7,8 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
 import android.net.wifi.WifiManager
+import android.os.Build
+import android.os.Process as AndroidProcess
 import androidx.annotation.StringRes
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.preference.PreferenceManager
@@ -25,6 +27,7 @@ import ca.pkay.rcloneexplorer.notifications.SyncServiceNotifications
 import ca.pkay.rcloneexplorer.notifications.SyncServiceNotifications.Companion.GROUP_ID
 import ca.pkay.rcloneexplorer.notifications.support.StatusObject
 import ca.pkay.rcloneexplorer.util.FLog
+import ca.pkay.rcloneexplorer.util.CurrentSyncDetails
 import ca.pkay.rcloneexplorer.util.SyncLog
 import ca.pkay.rcloneexplorer.util.WifiConnectivitiyUtil
 import kotlinx.serialization.json.Json
@@ -48,6 +51,8 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
         const val TASK_SYNC_ACTION = "START_TASK"
         const val TASK_CANCEL_ACTION = "CANCEL_TASK"
         const val EXTRA_TASK_ID = "task"
+        const val ACTION_TOGGLE_PAUSE = "ca.pkay.rcloneexplorer.action.TOGGLE_SYNC_PAUSE"
+        const val EXTRA_NOTIFICATION_ID = "notification_id"
 
         // Todo: Allow SyncWorker to run in silent mode, or remove this!
         const val EXTRA_TASK_SILENT = "notification"
@@ -74,11 +79,12 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
     private val sIsLoggingEnabled = mPreferences.getBoolean(getString(R.string.pref_key_logs), false)
     private var sConnectivityChanged = false
 
-    private var sRcloneProcess: Process? = null
+    private var sRcloneProcess: java.lang.Process? = null
     private val statusObject = StatusObject(mContext)
     private var failureReason = FAILURE_REASON.NO_FAILURE
     private var endNotificationAlreadyPosted = false
     private var silentRun = false
+    private var isPaused = false
     private val ongoingNotificationID = Random().nextInt()
 
 
@@ -92,13 +98,16 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
 
         prepareNotifications()
         registerBroadcastReceivers()
+        CurrentSyncDetails.clear(mContext)
+        CurrentSyncDetails.append(mContext, getString(R.string.current_sync_details_started))
 
         updateForegroundNotification(mNotificationManager.updateSyncNotification(
             mTitle,
             mTitle,
             ArrayList(),
             0,
-            ongoingNotificationID
+            ongoingNotificationID,
+            isPaused
         ))
 
 
@@ -143,7 +152,12 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
 
     private fun finishWork() {
         sRcloneProcess?.destroy()
-        mContext.unregisterReceiver(connectivityChangeBroadcastReceiver)
+        try {
+            mContext.unregisterReceiver(connectivityChangeBroadcastReceiver)
+            mContext.unregisterReceiver(syncActionBroadcastReceiver)
+        } catch (e: IllegalArgumentException) {
+            FLog.e(TAG, "Receiver already unregistered", e)
+        }
         postSync()
     }
 
@@ -177,6 +191,7 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
                 val iterator = reader.lineSequence().iterator()
                 while(iterator.hasNext()) {
                     val line = iterator.next()
+                    CurrentSyncDetails.append(mContext, line)
                     try {
                         val logline = JSONObject(line)
                         //todo: migrate this to StatusObject, so that we can handle everything properly.
@@ -187,14 +202,21 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
                             statusObject.parseLoglineToStatusObject(logline)
                         } else if (logline.getString("level") == "warning") {
                             statusObject.parseLoglineToStatusObject(logline)
+                        } else if (logline.has("stats")) {
+                            statusObject.parseLoglineToStatusObject(logline)
                         }
 
+                        val notificationContent = statusObject.getCurrentTransferSummary()
+                        if (notificationContent.isNotBlank()) {
+                            CurrentSyncDetails.append(mContext, "STATUS: $notificationContent")
+                        }
                         updateForegroundNotification(mNotificationManager.updateSyncNotification(
                             title,
-                            statusObject.notificationContent,
+                            notificationContent,
                             statusObject.notificationBigText,
                             statusObject.notificationPercent,
-                            ongoingNotificationID
+                            ongoingNotificationID,
+                            isPaused
                         ))
                     } catch (e: JSONException) {
                         FLog.e(TAG, "SyncService-Error: the offending line: $line")
@@ -208,6 +230,7 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
             }
             try {
                 localProcessReference.waitFor()
+                CurrentSyncDetails.append(mContext, "rclone exit code: ${localProcessReference.exitValue()}")
             } catch (e: InterruptedException) {
                 FLog.e(TAG, "onHandleIntent: error waiting for process", e)
             }
@@ -415,6 +438,13 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
         val intentFilter = IntentFilter()
         intentFilter.addAction(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION)
         mContext.registerReceiver(connectivityChangeBroadcastReceiver, intentFilter)
+        val syncActionFilter = IntentFilter()
+        syncActionFilter.addAction(ACTION_TOGGLE_PAUSE)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            mContext.registerReceiver(syncActionBroadcastReceiver, syncActionFilter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            mContext.registerReceiver(syncActionBroadcastReceiver, syncActionFilter)
+        }
     }
 
     private val connectivityChangeBroadcastReceiver: BroadcastReceiver =
@@ -427,5 +457,38 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
                 failureReason = FAILURE_REASON.CONNECTIVITY_CHANGED
             }
         }
+
+    private val syncActionBroadcastReceiver: BroadcastReceiver =
+        object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent) {
+                if (intent.getIntExtra(EXTRA_NOTIFICATION_ID, ongoingNotificationID) != ongoingNotificationID) {
+                    return
+                }
+                if (ACTION_TOGGLE_PAUSE == intent.action) {
+                    togglePause()
+                }
+            }
+        }
+
+    private fun togglePause() {
+        val process = sRcloneProcess ?: return
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            CurrentSyncDetails.append(mContext, getString(R.string.sync_pause_not_supported))
+            return
+        }
+        val signal = if (isPaused) 18 else 19
+        AndroidProcess.sendSignal(process.pid().toInt(), signal)
+        isPaused = !isPaused
+        val content = getString(if (isPaused) R.string.sync_paused else R.string.sync_resumed)
+        CurrentSyncDetails.append(mContext, content)
+        updateForegroundNotification(mNotificationManager.updateSyncNotification(
+            mTitle,
+            content,
+            statusObject.notificationBigText,
+            statusObject.notificationPercent,
+            ongoingNotificationID,
+            isPaused
+        ))
+    }
 
 }

@@ -199,6 +199,17 @@ class SyncServiceNotifications(var mContext: Context) {
         percent: Int,
         notificationId: Int
     ): Notification? {
+        return updateSyncNotification(title, content, bigTextArray, percent, notificationId, false)
+    }
+
+    fun updateSyncNotification(
+        title: String,
+        content: String,
+        bigTextArray: ArrayList<String>,
+        percent: Int,
+        notificationId: Int,
+        paused: Boolean
+    ): Notification? {
         if(content.isBlank()){
             FLog.e(TAG, "Missing notification content!")
             return null
@@ -216,11 +227,25 @@ class SyncServiceNotifications(var mContext: Context) {
         )
 
         if(mCancelId != mCancelUnsetId) {
+            val pauseIntent = Intent(SyncWorker.ACTION_TOGGLE_PAUSE)
+            pauseIntent.setPackage(mContext.packageName)
+            pauseIntent.putExtra(SyncWorker.EXTRA_NOTIFICATION_ID, notificationId)
+            val pausePendingIntent = PendingIntent.getBroadcast(
+                mContext,
+                notificationId,
+                pauseIntent,
+                GenericSyncNotification.getFlags()
+            )
 
             val intent = WorkManager.getInstance(mContext)
                 .createCancelPendingIntent(mCancelId)
 
             builder.clearActions()
+            builder.addAction(
+                R.drawable.ic_round_av_timer_24,
+                mContext.getString(if (paused) R.string.sync_action_resume else R.string.sync_action_pause),
+                pausePendingIntent
+            )
             builder.addAction(
                 R.drawable.ic_cancel_download,
                 mContext.getString(R.string.cancel),

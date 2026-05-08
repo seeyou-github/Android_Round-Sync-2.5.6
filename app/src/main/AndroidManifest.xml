@@ -224,6 +224,10 @@
             android:name=".Activities.LogActivity"
             android:label="@string/logFragment"
             android:theme="@style/AppTheme.NoActionBar" /> <!-- Auto Language Generation -->
+        <activity
+            android:name=".Activities.CurrentSyncDetailsActivity"
+            android:label="@string/current_sync_details"
+            android:theme="@style/AppTheme.NoActionBar" />
         <service
             android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
             android:enabled="false"

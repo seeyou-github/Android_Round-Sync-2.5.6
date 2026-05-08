@@ -59,6 +59,29 @@ class StatusObject(var mContext: Context){
         return mStats.optInt("totalTransfers", 0)
     }
 
+    fun getCurrentTransferSummary(): String {
+        val transfers = mStats.optJSONArray("transferring") ?: return notificationContent
+        if (transfers.length() == 0) {
+            return notificationContent
+        }
+        val transferObject = transfers.optJSONObject(0) ?: return notificationContent
+        val filename = transferObject.optString("name", "")
+        val transferred = Formatter.formatFileSize(mContext, transferObject.optLong("bytes", 0))
+        val total = Formatter.formatFileSize(mContext, transferObject.optLong("size", 0))
+        return if (filename.isNotEmpty()) {
+            mContext.getString(
+                R.string.sync_notification_current_file_summary,
+                filename,
+                transferred,
+                total,
+                getTransfers(),
+                getTotalTransfers()
+            )
+        } else {
+            notificationContent
+        }
+    }
+
     fun getDeletions(): Int {
         return mStats.optInt("deletes", 0) + mStats.optInt("deletedDirs", 0)
     }
@@ -203,6 +226,16 @@ class StatusObject(var mContext: Context){
                 val transferObject = transfers.getJSONObject(0)
                 var filename = transferObject.optString("name", "")
                 if(!filename.equals("")) {
+                    notificationBigText.add(String.format(
+                        mContext.getString(R.string.sync_notification_current_file_bytes),
+                        Formatter.formatFileSize(mContext, transferObject.optLong("bytes", 0)),
+                        Formatter.formatFileSize(mContext, transferObject.optLong("size", 0))
+                    ))
+                    notificationBigText.add(String.format(
+                        mContext.getString(R.string.sync_notification_file_count),
+                        getTransfers(),
+                        getTotalTransfers()
+                    ))
                     notificationBigText.add(String.format(
                         mContext.getString(R.string.sync_notification_file_syncing),
                         filename

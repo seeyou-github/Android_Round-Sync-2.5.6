@@ -374,6 +374,17 @@
     </plurals>
 
     <string name="sync_notification_short">%s 共 %s ，剩余 %s</string>
+    <string name="sync_notification_current_file_summary">%1$s：%2$s / %3$s（%4$d / %5$d）</string>
+    <string name="sync_notification_current_file_bytes">当前文件：%1$s / %2$s</string>
+    <string name="sync_notification_file_count">文件：%1$d / %2$d</string>
+    <string name="sync_action_pause">暂停</string>
+    <string name="sync_action_resume">继续</string>
+    <string name="sync_paused">同步已暂停</string>
+    <string name="sync_resumed">同步已继续</string>
+    <string name="sync_pause_not_supported">此 Android 版本不支持暂停</string>
+    <string name="current_sync_details">当前同步详情</string>
+    <string name="current_sync_details_empty">暂无当前同步详情。</string>
+    <string name="current_sync_details_started">已开始记录同步详情</string>
     <string name="abi_not_supported_arm_downgrade">不幸的是，此 Round Sync 版本与您的设备不兼容。试试 armeabi-v7a 的 APK， 从 github.com/newhinton/Round-Sync/releases/latest 下载。</string>
     <string name="abi_not_supported">您的设备不支持此版本的 Round Sync。</string>
     <string name="trigger">触发器</string>

@@ -388,6 +388,17 @@
     <string name="sync_notification_file_checking">Checking: %14s</string>
     <string name="sync_notification_elapsed">Elapsed: %14s</string>
     <string name="sync_notification_short">%1$s of %2$s, %3$s remaining</string>
+    <string name="sync_notification_current_file_summary">%1$s: %2$s / %3$s (%4$d / %5$d)</string>
+    <string name="sync_notification_current_file_bytes">Current file: %1$s / %2$s</string>
+    <string name="sync_notification_file_count">Files: %1$d / %2$d</string>
+    <string name="sync_action_pause">Pause</string>
+    <string name="sync_action_resume">Resume</string>
+    <string name="sync_paused">Sync paused</string>
+    <string name="sync_resumed">Sync resumed</string>
+    <string name="sync_pause_not_supported">Pause is not supported on this Android version</string>
+    <string name="current_sync_details">Current sync details</string>
+    <string name="current_sync_details_empty">No current sync details.</string>
+    <string name="current_sync_details_started">Sync details started</string>
     <plurals name="modern_prettyprint_duration_d">
         <item quantity="one">%s Day</item>
         <item quantity="other">%s Days</item>

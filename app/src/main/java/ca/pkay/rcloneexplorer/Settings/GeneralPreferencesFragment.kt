@@ -1,7 +1,10 @@
 package ca.pkay.rcloneexplorer.Settings
 
+import android.app.Activity
 import android.content.DialogInterface
+import android.content.Intent
 import android.content.SharedPreferences
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.text.InputType
@@ -14,6 +17,7 @@ import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceManager
 import ca.pkay.rcloneexplorer.AppShortcutsHelper
 import ca.pkay.rcloneexplorer.Items.RemoteItem
+import ca.pkay.rcloneexplorer.Log2File
 import ca.pkay.rcloneexplorer.R
 import ca.pkay.rcloneexplorer.Rclone
 import ca.pkay.rcloneexplorer.util.FLog
@@ -24,8 +28,10 @@ import es.dmoral.toasty.Toasty
 
 class GeneralPreferencesFragment : PreferenceFragmentCompat() {
 
+    private val requestLogLocation = 901
 
     private lateinit var sharedPreferences: SharedPreferences
+    private var logLocationPreference: Preference? = null
 
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -57,6 +63,78 @@ class GeneralPreferencesFragment : PreferenceFragmentCompat() {
             true
         }
 
+        logLocationPreference = findPreference(getString(R.string.pref_key_log_location_uri))
+        logLocationPreference?.setOnPreferenceClickListener {
+            openLogLocationPicker()
+            true
+        }
+        updateLogLocationState()
+
+    }
+
+    private fun openLogLocationPicker() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+        intent.addFlags(
+            Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
+                Intent.FLAG_GRANT_PREFIX_URI_PERMISSION or
+                Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+        )
+        startActivityForResult(intent, requestLogLocation)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode != requestLogLocation) {
+            return
+        }
+        if (resultCode != Activity.RESULT_OK || data?.data == null) {
+            Toast.makeText(context, R.string.log_location_cancelled, Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val uri = data.data ?: return
+        val takeFlags = data.flags and
+            (Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+        try {
+            requireContext().contentResolver.takePersistableUriPermission(uri, takeFlags)
+        } catch (e: SecurityException) {
+            FLog.e(TAG(), "Could not persist log location permission", e)
+        }
+
+        if (Log2File.testLogLocation(requireContext(), uri)) {
+            sharedPreferences.edit()
+                .putString(getString(R.string.pref_key_log_location_uri), uri.toString())
+                .apply()
+            Toast.makeText(context, R.string.log_location_saved, Toast.LENGTH_SHORT).show()
+        } else {
+            sharedPreferences.edit()
+                .remove(getString(R.string.pref_key_log_location_uri))
+                .apply()
+            Toast.makeText(context, R.string.log_location_no_permission, Toast.LENGTH_LONG).show()
+        }
+        updateLogLocationState()
+    }
+
+    private fun updateLogLocationState() {
+        val uriString = sharedPreferences.getString(getString(R.string.pref_key_log_location_uri), "") ?: ""
+        val preference = logLocationPreference ?: return
+        if (uriString.isEmpty()) {
+            preference.setSummary(R.string.log_location_not_set)
+            return
+        }
+        val uri = Uri.parse(uriString)
+        if (hasPersistedWritePermission(uri)) {
+            preference.summary = uri.lastPathSegment ?: uriString
+        } else {
+            preference.setSummary(R.string.log_location_no_permission)
+        }
+    }
+
+    private fun hasPersistedWritePermission(uri: Uri): Boolean {
+        return requireContext().contentResolver.persistedUriPermissions.any {
+            it.uri == uri && it.isWritePermission
+        }
     }
 
     private fun showThumbnailSizeDialog(preference: Preference) {

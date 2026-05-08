@@ -17,13 +17,11 @@ import androidx.work.Worker
 import androidx.work.WorkerParameters
 import ca.pkay.rcloneexplorer.Items.FileItem
 import ca.pkay.rcloneexplorer.Items.RemoteItem
-import ca.pkay.rcloneexplorer.Log2File
 import ca.pkay.rcloneexplorer.R
 import ca.pkay.rcloneexplorer.Rclone
 import ca.pkay.rcloneexplorer.notifications.prototypes.WorkerNotification
 import ca.pkay.rcloneexplorer.notifications.support.StatusObject
 import ca.pkay.rcloneexplorer.util.FLog
-import ca.pkay.rcloneexplorer.util.SyncLog
 import ca.pkay.rcloneexplorer.util.WifiConnectivitiyUtil
 import de.felixnuesse.extract.extensions.tag
 import de.felixnuesse.extract.notifications.implementations.DownloadWorkerNotification
@@ -68,11 +66,7 @@ class EphemeralWorker (private var mContext: Context, workerParams: WorkerParame
     private val mPreferences = PreferenceManager.getDefaultSharedPreferences(mContext)
 
 
-    private var log2File: Log2File? = null
-
-
     // States
-    private val sIsLoggingEnabled = mPreferences.getBoolean(getString(R.string.pref_key_logs), false)
     private var sConnectivityChanged = false
 
     private var sRcloneProcess: Process? = null
@@ -88,10 +82,6 @@ class EphemeralWorker (private var mContext: Context, workerParams: WorkerParame
     override fun doWork(): Result {
 
         registerBroadcastReceivers()
-        if (sIsLoggingEnabled) {
-            log2File = Log2File(mContext)
-        }
-
         updateForegroundNotification(mNotificationManager?.updateNotification(
             mTitle,
             mTitle,
@@ -186,8 +176,6 @@ class EphemeralWorker (private var mContext: Context, workerParams: WorkerParame
 
     override fun onStopped() {
         super.onStopped()
-        SyncLog.info(mContext, mTitle, mContext.getString(R.string.operation_sync_cancelled))
-        SyncLog.info(mContext, mTitle, statusObject.toString())
         failureReason = FAILURE_REASON.CANCELLED
         finishWork()
     }
@@ -219,9 +207,6 @@ class EphemeralWorker (private var mContext: Context, workerParams: WorkerParame
                         val logline = JSONObject(line)
                         //todo: migrate this to StatusObject, so that we can handle everything properly.
                         if (logline.getString("level") == "error") {
-                            if (sIsLoggingEnabled) {
-                                log2File?.log(line)
-                            }
                             statusObject.parseLoglineToStatusObject(logline)
                         } else if (logline.getString("level") == "warning") {
                             statusObject.parseLoglineToStatusObject(logline)
@@ -299,7 +284,6 @@ class EphemeralWorker (private var mContext: Context, workerParams: WorkerParame
 
     private fun showCancelledNotification(notificationId: Int) {
         val content = mContext.getString(R.string.operation_failed_cancelled)
-        SyncLog.info(mContext, mTitle, content)
         mNotificationManager?.showCancelledNotification(
             mTitle,
             content,
@@ -326,7 +310,6 @@ class EphemeralWorker (private var mContext: Context, workerParams: WorkerParame
         Est. Speed: ${statusObject.getEstimatedAverageSpeed()}
         Avg. Speed: ${statusObject.getLastItemAverageSpeed()}
                         """.trimIndent()
-        //SyncLog.info(mContext, mContext.getString(R.string.operation_success, mTitle), message)
     }
 
     private fun showFailNotification(notificationId: Int, content: String, wasCancelled: Boolean = false) {
@@ -347,7 +330,6 @@ class EphemeralWorker (private var mContext: Context, workerParams: WorkerParame
         if (wasCancelled) {
             notifyTitle = mContext.getString(R.string.operation_failed_cancelled)
         }
-        SyncLog.error(mContext, notifyTitle, "$mTitle: $text")
         mNotificationManager?.showFailedNotification(
             mTitle,
             text,

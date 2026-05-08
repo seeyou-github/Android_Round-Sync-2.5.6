@@ -20,7 +20,6 @@ public class SettingsFragment extends Fragment {
     public final static int GENERAL_SETTINGS = 1;
     public final static int FILE_ACCESS_SETTINGS = 2;
     public final static int LOOK_AND_FEEL_SETTINGS = 3;
-    public final static int LOGGING_SETTINGS = 4;
     public final static int NOTIFICATION_SETTINGS = 5;
     private OnSettingCategorySelectedListener clickListener;
 
@@ -70,10 +69,6 @@ public class SettingsFragment extends Fragment {
     private void setClickListeners(View view) {
 
         view.findViewById(R.id.general_settings).setOnClickListener(v -> clickListener.onSettingCategoryClicked(GENERAL_SETTINGS));
-
-        view.findViewById(R.id.logging_settings).setOnClickListener(v -> clickListener.onSettingCategoryClicked(LOGGING_SETTINGS));
-
-        view.findViewById(R.id.logging_settings).setOnClickListener(v -> clickListener.onSettingCategoryClicked(LOGGING_SETTINGS));
 
         view.findViewById(R.id.look_and_feel_settings).setOnClickListener(v -> clickListener.onSettingCategoryClicked(LOOK_AND_FEEL_SETTINGS));
 

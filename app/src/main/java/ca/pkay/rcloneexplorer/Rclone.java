@@ -1,4 +1,4 @@
-package ca.pkay.rcloneexplorer;
+﻿package ca.pkay.rcloneexplorer;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -26,7 +26,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
@@ -71,13 +70,11 @@ public class Rclone {
     private Context context;
     private String rclone;
     private String rcloneConf;
-    private Log2File log2File;
 
     public Rclone(Context context) {
         this.context = context;
         this.rclone = context.getApplicationInfo().nativeLibraryDir + "/librclone.so";
         this.rcloneConf = context.getFilesDir().getPath() + "/rclone.conf";
-        log2File = new Log2File(context);
     }
 
     private String[] createCommand(ArrayList<String> args) {
@@ -88,18 +85,11 @@ public class Rclone {
         return command;
     }
     private String[] createCommand(String ...args) {
-        boolean loggingEnabled = PreferenceManager
-                .getDefaultSharedPreferences(context)
-                .getBoolean(context.getString(R.string.pref_key_logs), false);
         ArrayList<String> command = new ArrayList<>();
 
         command.add(rclone);
         command.add("--config");
         command.add(rcloneConf);
-
-        if(loggingEnabled) {
-            command.add("-vvv");
-        }
 
         command.addAll(Arrays.asList(args));
         return createCommand(command);
@@ -111,9 +101,6 @@ public class Rclone {
     }
 
     private String[] createCommandWithOptions(ArrayList<String> args) {
-        boolean loggingEnabled = PreferenceManager
-                .getDefaultSharedPreferences(context)
-                .getBoolean(context.getString(R.string.pref_key_logs), false);
         ArrayList<String> command = new ArrayList<>();
 
         String cachePath = context.getCacheDir().getAbsolutePath();
@@ -141,10 +128,6 @@ public class Rclone {
 
         command.add("--config");
         command.add(rcloneConf);
-
-        if(loggingEnabled) {
-            command.add("-vvv");
-        }
 
         command.addAll(args);
         return createCommand(command);
@@ -197,36 +180,6 @@ public class Rclone {
         return environmentValues.toArray(new String[0]);
     }
 
-    public void logErrorOutput(Process process) {
-        if (process == null) {
-            return;
-        }
-
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean isLoggingEnable = sharedPreferences.getBoolean(context.getString(R.string.pref_key_logs), false);
-        if (!isLoggingEnable) {
-            return;
-        }
-
-        StringBuilder stringBuilder = new StringBuilder(100);
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                stringBuilder.append(line).append("\n");
-            }
-        } catch (InterruptedIOException iioe) {
-            FLog.i(TAG, "logErrorOutput: process died while reading. Log may be incomplete.");
-        } catch (IOException e) {
-            if("Stream closed".equals(e.getMessage())) {
-                FLog.d(TAG, "logErrorOutput: could not read stderr, process stream is already closed");
-            } else {
-                FLog.e(TAG, "logErrorOutput: ", e);
-            }
-            return;
-        }
-        log2File.log(stringBuilder.toString());
-    }
-
     @Nullable
     public List<FileItem> getDirectoryContent(RemoteItem remote, String path, boolean startAtRoot) {
         String remoteAndPath = remote.getName() + ":";
@@ -275,7 +228,6 @@ public class Rclone {
             process.waitFor();
             // For local/alias remotes, exit(6) is not a fatal error.
             if (process.exitValue() != 0 && (process.exitValue() != 6 || !remote.isRemoteType(RemoteItem.LOCAL, RemoteItem.ALIAS))) {
-                logErrorOutput(process);
                 return null;
             }
 
@@ -340,7 +292,6 @@ public class Rclone {
             process.waitFor();
             if (process.exitValue() != 0) {
                 Toasty.error(context, context.getString(R.string.error_getting_remotes), Toast.LENGTH_SHORT, true).show();
-                logErrorOutput(process);
                 return new ArrayList<>();
             }
 
@@ -530,7 +481,6 @@ public class Rclone {
             process.waitFor();
             if (process.exitValue() != 0) {
                 Toasty.error(context, context.getString(R.string.error_getting_config), Toast.LENGTH_SHORT, true).show();
-                logErrorOutput(process);
             }
 
             configs = new JSONObject(output.toString());
@@ -636,14 +586,6 @@ public class Rclone {
             params.add(baseUrl);
         }
 
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean isLoggingEnabled = sharedPreferences.getBoolean(context.getString(R.string.pref_key_logs), false);
-        if (isLoggingEnabled) {
-            File serveLog = new File(context.getExternalFilesDir("logs"), "serve.log");
-            params.add("--log-file");
-            params.add(serveLog.getAbsolutePath());
-        }
-
         String[] env = getRcloneEnv();
         String[] command = params.toArray(new String[0]);
         try {
@@ -678,7 +620,7 @@ public class Rclone {
         String localRemotePath = (remoteItem.isRemoteType(RemoteItem.LOCAL)) ? getLocalRemotePathPrefix(remoteItem, context)  + "/" : "";
         String remoteSection = (remotePath.compareTo("//" + remoteName) == 0) ? remoteName + ":" + localRemotePath : remoteName + ":" + localRemotePath + remotePath;
 
-        ArrayList<String> defaultParameter = new ArrayList<>(Arrays.asList("--transfers", "1", "--stats=1s", "--stats-log-level", "NOTICE", "--use-json-log"));
+        ArrayList<String> defaultParameter = new ArrayList<>(Arrays.asList("--transfers", "1", "--stats=1s", "--stats-log-level", "NOTICE", "--log-level", "DEBUG", "--use-json-log"));
         ArrayList<String> directionParameter = new ArrayList<>();
 
         if(useMD5Sum){
@@ -733,7 +675,7 @@ public class Rclone {
 
         localFilePath = encodePath(localFilePath);
 
-        command = createCommandWithOptions("copy", remoteFilePath, localFilePath, "--transfers", "1", "--stats=1s", "--stats-log-level", "NOTICE", "--use-json-log");
+        command = createCommandWithOptions("copy", remoteFilePath, localFilePath, "--transfers", "1", "--stats=1s", "--stats-log-level", "NOTICE", "--log-level", "DEBUG", "--use-json-log");
 
         String[] env = getRcloneEnv();
         try {
@@ -765,7 +707,7 @@ public class Rclone {
             path = (uploadPath.compareTo("//" + remoteName) == 0) ? remoteName + ":" + localRemotePath : remoteName + ":" + localRemotePath + uploadPath;
         }
 
-        command = createCommandWithOptions("copy", uploadFile, path, "--transfers", "1", "--stats=1s", "--stats-log-level", "NOTICE", "--use-json-log");
+        command = createCommandWithOptions("copy", uploadFile, path, "--transfers", "1", "--stats=1s", "--stats-log-level", "NOTICE", "--log-level", "DEBUG", "--use-json-log");
 
         String[] env = getRcloneEnv();
         try {
@@ -841,7 +783,6 @@ public class Rclone {
             Process process = getRuntimeProcess(command, env);
             process.waitFor();
             if (process.exitValue() != 0) {
-                logErrorOutput(process);
                 return false;
             }
         } catch (IOException | InterruptedException e) {
@@ -896,7 +837,6 @@ public class Rclone {
             Process process = getRuntimeProcess(command, env);
             process.waitFor();
             if (process.exitValue() != 0) {
-                logErrorOutput(process);
                 return false;
             }
         } catch (IOException | InterruptedException e) {
@@ -915,7 +855,6 @@ public class Rclone {
             public void run() {
                 try {
                     process.waitFor();
-                    logErrorOutput(process);
                 } catch (InterruptedException e) {
                     FLog.e(TAG, "downloadToPipe: error waiting for process", e);
                 }
@@ -933,7 +872,6 @@ public class Rclone {
             public void run() {
                 try {
                     process.waitFor();
-                    logErrorOutput(process);
                 } catch (InterruptedException e) {
                     FLog.e(TAG, "uploadFromPipe: error waiting for process", e);
                 }
@@ -970,7 +908,6 @@ public class Rclone {
             process = getRuntimeProcess(command, env);
             process.waitFor();
             if (process.exitValue() != 0) {
-                logErrorOutput(process);
                 return null;
             }
 
@@ -980,7 +917,6 @@ public class Rclone {
         } catch (IOException | InterruptedException e) {
             FLog.e(TAG, "link: error running rclone", e);
             if (process != null) {
-                logErrorOutput(process);
             }
         }
         return null;
@@ -1064,7 +1000,6 @@ public class Rclone {
             Process process = getRuntimeProcess(command);
             process.waitFor();
             if (process.exitValue() != 0) {
-                logErrorOutput(process);
                 return "-1";
             }
 
@@ -1113,7 +1048,6 @@ public class Rclone {
             if (0 != process.exitValue()) {
                 FLog.e(TAG, "aboutRemote: rclone error, exit(%d)", process.exitValue());
                 FLog.e(TAG, "aboutRemote: ", output);
-                logErrorOutput(process);
                 return new AboutResult();
             }
 
@@ -1529,7 +1463,6 @@ public class Rclone {
                     if(!silent){
                         Toasty.error(context, context.getString(R.string.error_getting_remotes), Toast.LENGTH_SHORT, true).show();
                     }
-                    logErrorOutput(process);
                     return new ArrayList<>();
                 }
 

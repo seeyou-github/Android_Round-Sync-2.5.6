@@ -38,6 +38,15 @@
             app:summary="@string/transfer_only_on_wifi_summary" />
     </PreferenceCategory>
 
+    <PreferenceCategory android:title="@string/preference_category_header_logging">
+        <Preference
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:key="@string/pref_key_log_location_uri"
+            android:title="@string/log_location_title"
+            app:summary="@string/log_location_not_set" />
+    </PreferenceCategory>
+
     <PreferenceCategory android:title="@string/preference_category_header_proxy">
         <SwitchPreference
             android:defaultValue="false"

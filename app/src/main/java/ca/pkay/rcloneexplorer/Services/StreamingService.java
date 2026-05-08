@@ -120,10 +120,6 @@ public class StreamingService extends IntentService {
             }
         }
 
-        if (runningProcess != null && runningProcess.exitValue() != 0) {
-            rclone.logErrorOutput(runningProcess);
-        }
-
         stopForeground(true);
     }
 

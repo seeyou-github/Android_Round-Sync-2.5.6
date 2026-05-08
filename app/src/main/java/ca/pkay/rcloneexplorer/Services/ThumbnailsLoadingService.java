@@ -3,9 +3,7 @@ package ca.pkay.rcloneexplorer.Services;
 import android.app.IntentService;
 import android.content.Intent;
 import androidx.annotation.Nullable;
-import androidx.preference.PreferenceManager;
 import ca.pkay.rcloneexplorer.Items.RemoteItem;
-import ca.pkay.rcloneexplorer.R;
 import ca.pkay.rcloneexplorer.Rclone;
 import ca.pkay.rcloneexplorer.util.FLog;
 
@@ -42,15 +40,6 @@ public class ThumbnailsLoadingService extends IntentService {
         process = rclone.serve(Rclone.SERVE_PROTOCOL_HTTP, serverPort, false, null, null, remote, "", hiddenPath);
         if (process != null) {
             try {
-                if(PreferenceManager.getDefaultSharedPreferences(this).
-                        getBoolean(getString(R.string.pref_key_logs), false)) {
-                    new Thread() {
-                        @Override
-                        public void run() {
-                            rclone.logErrorOutput(process);
-                        }
-                    }.start();
-                }
                 process.waitFor();
             } catch (InterruptedException e) {
                 FLog.e(TAG, "onHandleIntent: error waiting for process", e);

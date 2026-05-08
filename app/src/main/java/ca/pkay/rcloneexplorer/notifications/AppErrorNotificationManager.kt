@@ -12,7 +12,6 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import ca.pkay.rcloneexplorer.R
 import ca.pkay.rcloneexplorer.util.PermissionManager
-import ca.pkay.rcloneexplorer.util.SyncLog
 
 
 class AppErrorNotificationManager(var mContext: Context) {

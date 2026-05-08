@@ -144,10 +144,8 @@
     <string name="pref_locale">Language</string>
     <string name="pref_locale_dlg_title">Select Language</string>
     <string name="pref_locale_restart_notice">Changing the language will take effect after restarting the app</string>
-    <string name="use_logs">Log rclone errors</string>
-    <string name="use_logs_summary">Save rclone error logs to the selected log location</string>
     <string name="log_location_title">Log save location</string>
-    <string name="log_location_not_set">Select a writable folder before enabling rclone error logging</string>
+    <string name="log_location_not_set">Sync logs are saved to private storage when unset</string>
     <string name="log_location_required">Set a writable log save location first</string>
     <string name="log_location_saved">Log save location saved</string>
     <string name="log_location_cancelled">Log save location was not changed</string>
@@ -263,11 +261,9 @@
     <string name="worker_download_cancelled">Download cancelled</string>
     <string name="wifi_connections_isnt_available">Wi-Fi connection isn\'t available</string>
     <string name="worker_upload_cancelled">Upload cancelled</string>
-    <string name="logging_settings_header">Logging</string>
     <string name="look_and_feel_settings_icon_content_description">Look and Feel settings icon</string>
     <string name="general_settings_icon_content_description">General settings icon</string>
     <string name="notification_settings_icon_content_description">Notification settings icon</string>
-    <string name="logging_settings_icon_content_description">Logging settings icon</string>
     <string name="file_access_settings_icon_content_description">File access settings icon</string>
     <string name="hidden_remotes">Hidden remotes</string>
     <string name="shared_preferences_hidden_remotes" translatable="false">shared_preferences_hidden_remotes</string>
@@ -377,8 +373,6 @@
     <string name="report_collection_stop_collection">Stop collection</string>
     <string name="pref_bugreport_start_title">Collect local bug report</string>
     <string name="pref_bugreport_start_summary">Start data collection by tapping the button and try to recreate the issue. When you are finished, stop the data collection.</string>
-    <string name="pref_send_sigquit_title">Debug: Stop with SIGQUIT</string>
-    <string name="pref_send_sigquit_summary">Stops all rclone processes with kill -SIGQUIT. Requires logging enabled.</string>
     <string name="sync_notification_transferred">Transferred %1$s of %2$s</string>
     <string name="sync_notification_speed">"Speed:     %s"</string>
     <string name="sync_notification_remaining">"Remaining: %s"</string>
@@ -396,9 +390,9 @@
     <string name="sync_paused">Sync paused</string>
     <string name="sync_resumed">Sync resumed</string>
     <string name="sync_pause_not_supported">Pause is not supported on this Android version</string>
-    <string name="current_sync_details">Current sync details</string>
-    <string name="current_sync_details_empty">No current sync details.</string>
-    <string name="current_sync_details_started">Sync details started</string>
+    <string name="current_sync_details">Sync log</string>
+    <string name="current_sync_details_empty">No sync log.</string>
+    <string name="current_sync_details_started">Sync log started</string>
     <plurals name="modern_prettyprint_duration_d">
         <item quantity="one">%s Day</item>
         <item quantity="other">%s Days</item>
@@ -479,7 +473,6 @@
     <string name="light_theme">Light Mode</string>
     <string name="theme_title">Theme</string>
     <string name="remote_folder_picker_title">Folder picker</string>
-    <string name="logFragment">Logs</string>
     <string name="alarm_while_idle">Allow tasks to run when the device is idle</string>
     <string name="alarm_while_idle_summary">May consume more battery, but disabled can cause heavy delays.</string>
     <string name="task_data_validation_error_no_local_path">You have not selected a local path yet</string>
@@ -555,7 +548,6 @@
     <string name="fileAccessSettingsDescription">Control integration with other apps and storage</string>
     <string name="theminSettingsDescription">Change the appearance</string>
     <string name="notificationSettingsDescription">Control more precisely on when you get notified</string>
-    <string name="loggingSettingsDescription">Gather more insight when this app misbehaves</string>
     <string name="importSettingsDescription">Replace your current config with an backup</string>
     <string name="exportSettingsDescription">Backup your remotes, tasks and triggers</string>
     <string name="import_settings_icon_content_description">Import Icon</string>
@@ -611,7 +603,6 @@
     </string>
     <string name="attachment_summary_off">Only download attachments when manually requested</string>
     <string name="wrap_filenames_summary">Filenames will be truncated in the middle if they are too long. Otherwise they are shown in multiple lines.</string>
-    <string name="pref_send_sigquit_button">Kill!</string>
     <string name="app_update_title">Updates</string>
     <string name="preference_dialog_filesize_label">Filesize</string>
     <string name="preference_category_header_thumbnails">Thumbnails</string>

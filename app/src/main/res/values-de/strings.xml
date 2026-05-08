@@ -119,8 +119,6 @@
     <string name="pref_locale">Sprache</string>
     <string name="pref_locale_dlg_title">Sprache auswählen</string>
     <string name="pref_locale_restart_notice">Sprache wird beim nächsten neustart der App geändert.</string>
-    <string name="use_logs">Rclone-Fehler protokollieren</string>
-    <string name="use_logs_summary">Fehler werden in einer lokalen Datei protokolliert (Android/data/de.felixnuesse.extract/files/logs)</string>
     <string name="notifications_pref_title">Benachrichtigungen</string>
     <string name="content_description_circle">Kreis</string>
     <string name="loading">Lade</string>
@@ -209,11 +207,9 @@
     <string name="worker_download_cancelled">Download abgebrochen</string>
     <string name="wifi_connections_isnt_available">WLAN-Verbindung nicht verfügbar</string>
     <string name="worker_upload_cancelled">Hochladen abgebrochen</string>
-    <string name="logging_settings_header">Protokollierung</string>
     <string name="look_and_feel_settings_icon_content_description">Erscheinungsbild</string>
     <string name="general_settings_icon_content_description">Allgemeine Einstellungen-Symbol</string>
     <string name="notification_settings_icon_content_description">Benachrichtigungseinstellungen</string>
-    <string name="logging_settings_icon_content_description">Logging-Einstellungens-Symbol</string>
     <string name="file_access_settings_icon_content_description">Dateizugriff-Einstellungs-Symbol</string>
     <string name="hidden_remotes">Remote ausblenden</string>
     <string name="select_remotes_to_hide">Remote ausblenden</string>
@@ -285,8 +281,6 @@
     <string name="intro_storage_title">Speicherzugriff</string>
     <string name="intro_community_title">Community</string>
     <string name="intro_community_description">Round Sync wird von und für seine Community entwickelt. Hilf mit, indem du automatisch Fehlerberichte sendest. Auf felixnuesse.de/privacy-roundsync erfährst du mehr.</string>
-    <string name="pref_send_sigquit_title">Debug: Mit SIGQUIT beenden</string>
-    <string name="pref_send_sigquit_summary">Alle rclone-Prozesse mit kill -SIGQUIT beenden. Rclone-Protokollierung muss aktiviert sein.</string>
     <string name="sync_direction_local_remote">Synchronisiere Lokal zu entferntem Speicher</string>
     <string name="sync_direction_remote_local">Synchronisiere entfernten Speicher nach Lokal</string>
     <string name="tasks">Aufgaben</string>
@@ -387,7 +381,6 @@
     <string name="light_theme">Helles Thema</string>
     <string name="theme_title">Thema</string>
     <string name="remote_folder_picker_title">Ordnerauswahl</string>
-    <string name="logFragment">Logs</string>
     <string name="alarm_while_idle">Erlaube Aufgaben wenn das Gerät im Schlafmodus ist</string>
     <string name="alarm_while_idle_summary">Dies kann mehr Akku verbrauchen da das Gerät extra aufwachen muss. Falls verboten können Aufgaben sehr verspätet starten</string>
     <string name="old_maintainer">Alter Maintainer</string>

@@ -220,10 +220,7 @@
             android:name=".Activities.TriggerListActivity"
             android:label="@string/trigger"
             android:theme="@style/AppTheme.NoActionBar" />
-        <activity
-            android:name=".Activities.LogActivity"
-            android:label="@string/logFragment"
-            android:theme="@style/AppTheme.NoActionBar" /> <!-- Auto Language Generation -->
+        <!-- Auto Language Generation -->
         <activity
             android:name=".Activities.CurrentSyncDetailsActivity"
             android:label="@string/current_sync_details"

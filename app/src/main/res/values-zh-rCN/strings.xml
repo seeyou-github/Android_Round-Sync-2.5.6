@@ -132,10 +132,8 @@
     <string name="pref_locale">语言</string>
     <string name="pref_locale_dlg_title">选择语言</string>
     <string name="pref_locale_restart_notice">语言更改将在重新启动应用后生效</string>
-    <string name="use_logs">记录 Rclone 错误</string>
-    <string name="use_logs_summary">将 Rclone 错误日志保存到已选择的日志位置</string>
     <string name="log_location_title">日志保存位置</string>
-    <string name="log_location_not_set">开启 Rclone 错误日志前，请先选择可写入的文件夹</string>
+    <string name="log_location_not_set">未设置时同步日志将保存到私有目录</string>
     <string name="log_location_required">请先设置可写入的日志保存位置</string>
     <string name="log_location_saved">日志保存位置已保存</string>
     <string name="log_location_cancelled">日志保存位置未更改</string>
@@ -234,11 +232,9 @@
     <string name="worker_download_cancelled">下载已取消</string>
     <string name="wifi_connections_isnt_available">Wi-Fi 连接不可用</string>
     <string name="worker_upload_cancelled">上传已取消</string>
-    <string name="logging_settings_header">错误日志</string>
     <string name="look_and_feel_settings_icon_content_description">外观设置图标</string>
     <string name="general_settings_icon_content_description">常规设置图标</string>
     <string name="notification_settings_icon_content_description">通知设置图标</string>
-    <string name="logging_settings_icon_content_description">日志记录设置图标</string>
     <string name="file_access_settings_icon_content_description">文件访问设置图标</string>
     <string name="hidden_remotes">隐藏远端</string>
     <string name="select_remotes_to_hide">选择要隐藏的远端</string>
@@ -346,8 +342,6 @@
     <string name="report_collection_stop_collection">停止收集</string>
     <string name="pref_bugreport_start_title">收集本地错误报告</string>
     <string name="pref_bugreport_start_summary">点击按钮开始数据收集，然后尝试重新创建问题。完成后停止数据收集。</string>
-    <string name="pref_send_sigquit_title">调试：使用 SIGQUIT 停止</string>
-    <string name="pref_send_sigquit_summary">使用 kill-SIGQUIT 停止所有 Rclone 进程。需要启用日志记录。</string>
     <string name="sync_notification_transferred">已转移 %s 共 %s</string>
     <string name="sync_notification_speed">速度: %s</string>
     <string name="sync_notification_remaining">剩余: %s</string>
@@ -382,9 +376,9 @@
     <string name="sync_paused">同步已暂停</string>
     <string name="sync_resumed">同步已继续</string>
     <string name="sync_pause_not_supported">此 Android 版本不支持暂停</string>
-    <string name="current_sync_details">当前同步详情</string>
-    <string name="current_sync_details_empty">暂无当前同步详情。</string>
-    <string name="current_sync_details_started">已开始记录同步详情</string>
+    <string name="current_sync_details">同步日志</string>
+    <string name="current_sync_details_empty">暂无同步日志。</string>
+    <string name="current_sync_details_started">已开始记录同步日志</string>
     <string name="abi_not_supported_arm_downgrade">不幸的是，此 Round Sync 版本与您的设备不兼容。试试 armeabi-v7a 的 APK， 从 github.com/newhinton/Round-Sync/releases/latest 下载。</string>
     <string name="abi_not_supported">您的设备不支持此版本的 Round Sync。</string>
     <string name="trigger">触发器</string>
@@ -430,7 +424,6 @@
     <string name="light_theme">明亮主题</string>
     <string name="theme_title">主题</string>
     <string name="remote_folder_picker_title">文件夹选取器</string>
-    <string name="logFragment">日志</string>
     <string name="alarm_while_idle">允许在设备进入待机状态(idle)时运行任务</string>
     <string name="alarm_while_idle_summary">可能会消耗更多电池，但禁用可能会导致严重延迟。</string>
     <string name="task_data_validation_error_no_local_path">您尚未选择本地路径</string>
@@ -504,7 +497,6 @@
     <string name="fileAccessSettingsDescription">控制与其他应用程序和存储的集成</string>
     <string name="theminSettingsDescription">更改外观</string>
     <string name="notificationSettingsDescription">更精确地控制您何时收到通知</string>
-    <string name="loggingSettingsDescription">当此应用行为异常时收集更多信息</string>
     <string name="importSettingsDescription">用备份替换您当前的配置</string>
     <string name="exportSettingsDescription">备份您的远端、任务和触发器</string>
     <string name="import_settings_icon_content_description">导入图标</string>

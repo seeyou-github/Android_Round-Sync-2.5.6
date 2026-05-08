@@ -65,7 +65,6 @@ import ca.pkay.rcloneexplorer.Dialogs.Dialogs;
 import ca.pkay.rcloneexplorer.Dialogs.InputDialog;
 import ca.pkay.rcloneexplorer.Dialogs.LoadingDialog;
 import ca.pkay.rcloneexplorer.Fragments.FileExplorerFragment;
-import ca.pkay.rcloneexplorer.Fragments.LogFragment;
 import ca.pkay.rcloneexplorer.Fragments.MainOtherFragment;
 import ca.pkay.rcloneexplorer.Fragments.PermissionFragment;
 import ca.pkay.rcloneexplorer.Fragments.RemotesFragment;
@@ -95,7 +94,6 @@ public class MainActivity extends AppCompatActivity
         InputDialog.OnPositive {
 
     private static final String TAG = "MainActivity";
-    public static final String MAIN_ACTIVITY_START_LOG = "MAIN_ACTIVITY_START_LOG";
     public static final String MAIN_ACTIVITY_START_IMPORT = "MAIN_ACTIVITY_START_IMPORT";
     public static final String MAIN_ACTIVITY_START_EXPORT = "MAIN_ACTIVITY_START_EXPORT";
     private static final int READ_REQUEST_CODE = 42; // code when opening rclone config file
@@ -198,10 +196,6 @@ public class MainActivity extends AppCompatActivity
             startTasksFragment();
         }
 
-        if(MAIN_ACTIVITY_START_LOG.equals(intent.getAction())){
-            startLogFragment();
-        }
-
         //todo: Migrate import and export out of the main activity
         if(MAIN_ACTIVITY_START_IMPORT.equals(intent.getAction())){
             startConfigImportFlow();
@@ -240,10 +234,6 @@ public class MainActivity extends AppCompatActivity
     protected void onResume() {
         super.onResume();
         updatePermissionFragmentVisibility();
-        if(MAIN_ACTIVITY_START_LOG.equals(getIntent().getAction())){
-            startLogFragment();
-            navigationView.setCheckedItem(R.id.nav_logs);
-        }
     }
 
     @Override
@@ -431,7 +421,6 @@ public class MainActivity extends AppCompatActivity
             case R.id.nav_remotes:
             case R.id.nav_tasks:
             case R.id.nav_trigger:
-            case R.id.nav_logs:
             case R.id.nav_permissions:
                 SharedPreferencesUtil.Companion.setLastOpenFragment(this, id);
                 break;
@@ -457,9 +446,6 @@ public class MainActivity extends AppCompatActivity
                 break;
             case R.id.nav_trigger:
                 startTriggerFragment();
-                break;
-            case R.id.nav_logs:
-                startLogFragment();
                 break;
             case R.id.nav_permissions:
                 startPermissionFragment();
@@ -494,11 +480,6 @@ public class MainActivity extends AppCompatActivity
     private void startTriggerFragment() {
         updateMainNavigation(R.string.other);
         startFragment(TriggerFragment.newInstance());
-    }
-
-    private void startLogFragment() {
-        updateMainNavigation(R.string.other);
-        startFragment(LogFragment.newInstance());
     }
 
     private void startOtherFragment() {
@@ -571,11 +552,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onOtherTriggersSelected() {
         startActivity(new Intent(this, TriggerListActivity.class));
-    }
-
-    @Override
-    public void onOtherLogsSelected() {
-        startActivity(new Intent(this, LogActivity.class));
     }
 
     private void warnUserAboutOverwritingConfiguration() {

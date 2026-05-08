@@ -2,13 +2,13 @@ package ca.pkay.rcloneexplorer.util;
 
 import android.content.Context;
 
+import ca.pkay.rcloneexplorer.Log2File;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -19,7 +19,6 @@ import java.util.Locale;
 
 public class CurrentSyncDetails {
 
-    private static final String FILE_NAME = "current_sync_details.log";
     private static final int MAX_LINES = 1200;
     private static final String[] DIFFERENCE_KEYWORDS = new String[]{
             "delete", "deleted", "deleting", "remove", "removed", "purge",
@@ -29,9 +28,10 @@ public class CurrentSyncDetails {
     };
 
     public static synchronized void clear(Context context) {
-        File file = getFile(context);
-        if (file.exists()) {
-            file.delete();
+        Log2File.delete(context, Log2File.SYNC_LOG_FILE_NAME);
+        File legacyFile = getLegacyFile(context);
+        if (legacyFile.exists()) {
+            legacyFile.delete();
         }
     }
 
@@ -39,9 +39,8 @@ public class CurrentSyncDetails {
         if (line == null || line.trim().isEmpty()) {
             return;
         }
-        try (FileWriter writer = new FileWriter(getFile(context), true)) {
-            writer.append(line);
-            writer.append(System.lineSeparator());
+        try {
+            Log2File.append(context, Log2File.SYNC_LOG_FILE_NAME, line + System.lineSeparator());
         } catch (IOException e) {
             FLog.e("CurrentSyncDetails", "Could not append sync details", e);
         }
@@ -55,41 +54,28 @@ public class CurrentSyncDetails {
     }
 
     public static synchronized String read(Context context) {
-        File file = getFile(context);
-        if (!file.exists()) {
-            return "";
+        String output = Log2File.read(context, Log2File.SYNC_LOG_FILE_NAME);
+        if (output.isEmpty() && Log2File.getConfiguredLogLocation(context) == null) {
+            output = readLegacy(context);
         }
-        StringBuilder output = new StringBuilder();
-        try (Reader reader = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8)) {
-            char[] buffer = new char[4096];
-            for (int read; (read = reader.read(buffer, 0, buffer.length)) > 0; ) {
-                output.append(buffer, 0, read);
-            }
-        } catch (IOException e) {
-            FLog.e("CurrentSyncDetails", "Could not read sync details", e);
-        }
-        return output.toString();
+        return output;
     }
 
     public static synchronized ArrayList<String> readLines(Context context) {
-        File file = getFile(context);
-        if (!file.exists()) {
+        String content = read(context);
+        if (content.isEmpty()) {
             return new ArrayList<>();
         }
         ArrayDeque<String> tail = new ArrayDeque<>(MAX_LINES);
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.trim().isEmpty()) {
-                    continue;
-                }
-                if (tail.size() == MAX_LINES) {
-                    tail.removeFirst();
-                }
-                tail.addLast(line);
+        String[] lines = content.split("\\r?\\n");
+        for (String line : lines) {
+            if (line.trim().isEmpty()) {
+                continue;
             }
-        } catch (IOException e) {
-            FLog.e("CurrentSyncDetails", "Could not read sync detail lines", e);
+            if (tail.size() == MAX_LINES) {
+                tail.removeFirst();
+            }
+            tail.addLast(line);
         }
         return new ArrayList<>(tail);
     }
@@ -136,7 +122,24 @@ public class CurrentSyncDetails {
         return false;
     }
 
-    private static File getFile(Context context) {
-        return new File(context.getFilesDir(), FILE_NAME);
+    private static String readLegacy(Context context) {
+        File file = getLegacyFile(context);
+        if (!file.exists()) {
+            return "";
+        }
+        StringBuilder output = new StringBuilder();
+        try (Reader reader = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8)) {
+            char[] buffer = new char[4096];
+            for (int read; (read = reader.read(buffer, 0, buffer.length)) > 0; ) {
+                output.append(buffer, 0, read);
+            }
+        } catch (IOException e) {
+            FLog.e("CurrentSyncDetails", "Could not read legacy sync log", e);
+        }
+        return output.toString();
+    }
+
+    private static File getLegacyFile(Context context) {
+        return new File(context.getFilesDir(), "current_sync_details.log");
     }
 }

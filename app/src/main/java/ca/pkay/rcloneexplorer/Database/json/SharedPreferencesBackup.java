@@ -44,10 +44,6 @@ public class SharedPreferencesBackup {
         // Notifications
         boolean appUpdates = sharedPreferences.getBoolean(context.getString(R.string.pref_key_app_updates), false);
 
-        // Logging
-        boolean useLogs = sharedPreferences.getBoolean(context.getString(R.string.pref_key_logs), false);
-
-
         JSONObject main = new JSONObject();
 
         main.put("showThumbnails", showThumbnails);
@@ -66,8 +62,6 @@ public class SharedPreferencesBackup {
         main.put("isDarkTheme", newTheme);
         main.put("isWrapFilenames", isWrapFilenames);
         main.put("appUpdates", appUpdates);
-        main.put("useLogs", useLogs);
-
         return main.toString();
     }
 
@@ -115,9 +109,6 @@ public class SharedPreferencesBackup {
 
         // Notifications
         editor.putBoolean(context.getString(R.string.pref_key_app_updates), jsonObject.getBoolean("appUpdates"));
-
-        // Logging
-        editor.putBoolean(context.getString(R.string.pref_key_logs), jsonObject.getBoolean("useLogs"));
 
         editor.apply();
     }

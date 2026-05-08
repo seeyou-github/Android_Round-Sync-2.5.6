@@ -1850,10 +1850,6 @@ public class FileExplorerFragment extends Fragment implements   FileExplorerRecy
                 savedFile.setReadOnly();
             }
 
-            if (process != null && process.exitValue() != 0) {
-                rclone.logErrorOutput(process);
-            }
-
             return process != null && process.exitValue() == 0;
         }
 

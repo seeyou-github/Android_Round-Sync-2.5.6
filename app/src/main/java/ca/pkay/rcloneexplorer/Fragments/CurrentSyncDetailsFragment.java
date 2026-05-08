@@ -64,6 +64,10 @@ public class CurrentSyncDetailsFragment extends Fragment {
         handler.removeCallbacks(refreshRunnable);
     }
 
+    public void refreshDetails() {
+        updateDetails();
+    }
+
     private void updateDetails() {
         if (adapter == null || getContext() == null) {
             return;

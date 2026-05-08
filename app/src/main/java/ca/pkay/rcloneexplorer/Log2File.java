@@ -1,9 +1,9 @@
 package ca.pkay.rcloneexplorer;
 
-import android.annotation.SuppressLint;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.UriPermission;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -22,29 +22,14 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 public class Log2File {
 
     private static final String TAG = "Log2File";
-    private static final String LOG_FILE_NAME = "log.txt";
     private static final String LOG_MIME_TYPE = "text/plain";
-    private final Context context;
+    public static final String SYNC_LOG_FILE_NAME = "sync.log";
 
-    public Log2File(Context context) {
-        this.context = context;
-    }
-
-    public void log(String message) {
-        @SuppressLint("SimpleDateFormat")
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        String currentDateTime = dateFormat.format(new Date());
-        new WriteLogMessage(context.getApplicationContext(), LOG_FILE_NAME, currentDateTime + " - " + message + "\n").execute();
-    }
-
-    private static class WriteLogMessage extends AsyncTask<Void, Void, Void> {
-
+    public static class WriteLogMessage extends AsyncTask<Void, Void, Void> {
         private final Context context;
         private final String fileName;
         private final String logMessage;
@@ -72,12 +57,16 @@ public class Log2File {
         if (uriString == null || uriString.isEmpty()) {
             return null;
         }
-        return Uri.parse(uriString);
+        Uri uri = Uri.parse(uriString);
+        if (!hasPersistedWritePermission(context, uri)) {
+            return null;
+        }
+        return uri;
     }
 
     public static boolean testLogLocation(Context context, Uri treeUri) {
         try {
-            writeToTree(context, treeUri, LOG_FILE_NAME, "Round Sync log location test\n");
+            writeToTree(context, treeUri, SYNC_LOG_FILE_NAME, "Round Sync log location test\n");
             return true;
         } catch (IOException | RuntimeException e) {
             FLog.e(TAG, "Could not test log file location", e);
@@ -151,8 +140,13 @@ public class Log2File {
         }
     }
 
-    public static void deleteErrorLog(Context context) {
-        delete(context, LOG_FILE_NAME);
+    private static boolean hasPersistedWritePermission(Context context, Uri uri) {
+        for (UriPermission permission : context.getContentResolver().getPersistedUriPermissions()) {
+            if (permission.getUri().equals(uri) && permission.isWritePermission()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static String readStream(InputStream stream) throws IOException {

@@ -22,7 +22,6 @@ public class MainOtherFragment extends Fragment {
 
     public interface NavigationListener {
         void onOtherTriggersSelected();
-        void onOtherLogsSelected();
     }
 
     public static MainOtherFragment newInstance() {
@@ -51,7 +50,6 @@ public class MainOtherFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_main_other, container, false);
 
         view.findViewById(R.id.other_triggers).setOnClickListener(v -> navigationListener.onOtherTriggersSelected());
-        view.findViewById(R.id.other_logs).setOnClickListener(v -> navigationListener.onOtherLogsSelected());
         view.findViewById(R.id.other_current_sync_details).setOnClickListener(v -> startActivity(new Intent(requireContext(), CurrentSyncDetailsActivity.class)));
         view.findViewById(R.id.other_settings).setOnClickListener(v -> startActivity(new Intent(requireContext(), SettingsActivity.class)));
         view.findViewById(R.id.other_about).setOnClickListener(v -> startActivity(new Intent(requireContext(), AboutActivity.class)));

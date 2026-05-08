@@ -11,14 +11,12 @@ import android.os.Build
 import android.os.Process as AndroidProcess
 import androidx.annotation.StringRes
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import androidx.preference.PreferenceManager
 import androidx.work.ForegroundInfo
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import ca.pkay.rcloneexplorer.Database.DatabaseHandler
 import ca.pkay.rcloneexplorer.Items.RemoteItem
 import ca.pkay.rcloneexplorer.Items.Task
-import ca.pkay.rcloneexplorer.Log2File
 import ca.pkay.rcloneexplorer.R
 import ca.pkay.rcloneexplorer.Rclone
 import ca.pkay.rcloneexplorer.notifications.GenericSyncNotification
@@ -28,7 +26,6 @@ import ca.pkay.rcloneexplorer.notifications.SyncServiceNotifications.Companion.G
 import ca.pkay.rcloneexplorer.notifications.support.StatusObject
 import ca.pkay.rcloneexplorer.util.FLog
 import ca.pkay.rcloneexplorer.util.CurrentSyncDetails
-import ca.pkay.rcloneexplorer.util.SyncLog
 import ca.pkay.rcloneexplorer.util.WifiConnectivitiyUtil
 import kotlinx.serialization.json.Json
 import org.json.JSONException
@@ -68,15 +65,7 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
     private var mRclone = Rclone(mContext)
     private var mDatabase = DatabaseHandler(mContext)
     private var mNotificationManager = SyncServiceNotifications(mContext)
-    private val mPreferences = PreferenceManager.getDefaultSharedPreferences(mContext)
-
-
-    private var log2File: Log2File? = null
-
-
-
     // States
-    private val sIsLoggingEnabled = mPreferences.getBoolean(getString(R.string.pref_key_logs), false)
     private var sConnectivityChanged = false
 
     private var sRcloneProcess: java.lang.Process? = null
@@ -98,9 +87,6 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
 
         prepareNotifications()
         registerBroadcastReceivers()
-        if (sIsLoggingEnabled) {
-            log2File = Log2File(mContext)
-        }
         CurrentSyncDetails.clear(mContext)
         CurrentSyncDetails.append(mContext, getString(R.string.current_sync_details_started))
 
@@ -147,8 +133,6 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
 
     override fun onStopped() {
         super.onStopped()
-        SyncLog.info(mContext, mTitle, mContext.getString(R.string.operation_sync_cancelled))
-        SyncLog.info(mContext, mTitle, statusObject.toString())
         failureReason = FAILURE_REASON.CANCELLED
         finishWork()
     }
@@ -186,7 +170,6 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
     }
 
     private fun handleSync(title: String) {
-        SyncLog.info(mContext, mTitle, mContext.getString(R.string.operation_start_sync))
         if (sRcloneProcess != null) {
             val localProcessReference = sRcloneProcess!!
             try {
@@ -199,9 +182,6 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
                         val logline = JSONObject(line)
                         //todo: migrate this to StatusObject, so that we can handle everything properly.
                         if (logline.getString("level") == "error") {
-                            if (sIsLoggingEnabled) {
-                                log2File?.log(line)
-                            }
                             statusObject.parseLoglineToStatusObject(logline)
                         } else if (logline.getString("level") == "warning") {
                             statusObject.parseLoglineToStatusObject(logline)
@@ -283,7 +263,6 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
     }
 
     private fun showCancelledNotification(notificationId: Int) {
-        SyncLog.info(mContext, mTitle, mContext.getString(R.string.operation_failed_cancelled))
         mNotificationManager.showCancelledNotificationOrReport(
             mTitle,
             notificationId,
@@ -306,7 +285,6 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
         Est. Speed: ${statusObject.getEstimatedAverageSpeed()}
         Avg. Speed: ${statusObject.getLastItemAverageSpeed()}
                         """.trimIndent()
-        SyncLog.info(mContext, mContext.getString(R.string.operation_success, mTitle), message)
     }
 
     // this is currently only a useless mapper. It is supposed to keep this worker in sync with the ephemeral one.
@@ -354,7 +332,6 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
         if (wasCancelled) {
             notifyTitle = mContext.getString(R.string.operation_failed_cancelled)
         }
-        SyncLog.error(mContext, notifyTitle, "$mTitle: $text")
         mNotificationManager.showFailedNotificationOrReport(
             mTitle,
             text,

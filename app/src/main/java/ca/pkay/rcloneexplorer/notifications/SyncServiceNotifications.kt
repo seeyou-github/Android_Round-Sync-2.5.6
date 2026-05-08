@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import androidx.preference.PreferenceManager
 import androidx.work.WorkManager
 import ca.pkay.rcloneexplorer.Activities.CurrentSyncDetailsActivity
 import ca.pkay.rcloneexplorer.BroadcastReceivers.SyncRestartAction
@@ -46,21 +45,12 @@ class SyncServiceNotifications(var mContext: Context) {
         mCancelId = id
     }
 
-    private fun useReports(): Boolean {
-        val mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext)
-        return mSharedPreferences.getBoolean(mContext.getString(R.string.pref_key_app_notification_reports), true)
-    }
-
     fun showFailedNotificationOrReport(
         title: String,
         content: String,
         notificationId: Int,
         taskid: Long
     ) {
-        if(!useReports()){
-            showFailedNotification(content, notificationId, taskid)
-            return
-        }
         if(mReportManager.getFailures()<=1) {
             showFailedNotification(content, notificationId, taskid)
             mReportManager.lastFailedNotification(notificationId)
@@ -104,10 +94,6 @@ class SyncServiceNotifications(var mContext: Context) {
         notificationId: Int,
         taskid: Long) {
 
-        if(!useReports()){
-            showCancelledNotification(content, notificationId, taskid)
-            return
-        }
         var title = mContext.getString(R.string.operation_failed_cancelled)
         if(mReportManager.getFailures()<=1) {
             showCancelledNotification(content, notificationId, taskid)
@@ -154,10 +140,6 @@ class SyncServiceNotifications(var mContext: Context) {
         notificationId: Int
     ) {
         showSuccessNotification(title, content, notificationId)
-
-        if(!useReports()){
-            return
-        }
 
         if(mReportManager.getSucesses()<=1) {
             mReportManager.lastSuccededNotification(notificationId)

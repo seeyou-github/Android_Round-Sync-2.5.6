@@ -97,8 +97,6 @@ public class MainActivity extends AppCompatActivity
     public static final String MAIN_ACTIVITY_START_IMPORT = "MAIN_ACTIVITY_START_IMPORT";
     public static final String MAIN_ACTIVITY_START_EXPORT = "MAIN_ACTIVITY_START_EXPORT";
     private static final int READ_REQUEST_CODE = 42; // code when opening rclone config file
-    private static final int REQUEST_PERMISSION_CODE = 62; // code when requesting permissions
-    private static final int REQUEST_PERMISSION_CODE_POST_NOTIFICATIONS = 63;
     private static final int SETTINGS_CODE = 71; // code when coming back from settings
     private static final int WRITE_REQUEST_CODE = 81; // code when exporting config
     private final String FILE_EXPLORER_FRAGMENT_TAG = "ca.pkay.rcexplorer.MAIN_ACTIVITY_FILE_EXPLORER_TAG";
@@ -114,6 +112,7 @@ public class MainActivity extends AppCompatActivity
     private TextView bottomNavRemotes;
     private TextView bottomNavOther;
     private ImageButton mainAddButton;
+    private boolean notificationPermissionPromptShown;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -234,6 +233,7 @@ public class MainActivity extends AppCompatActivity
     protected void onResume() {
         super.onResume();
         updatePermissionFragmentVisibility();
+        promptForNotificationPermissionIfNeeded();
     }
 
     @Override
@@ -644,6 +644,24 @@ public class MainActivity extends AppCompatActivity
             navMenu.findItem(R.id.nav_permissions).setVisible(true);
         }
 
+    }
+
+    private void promptForNotificationPermissionIfNeeded() {
+        if (notificationPermissionPromptShown || isFinishing()) {
+            return;
+        }
+        PermissionManager permissionManager = new PermissionManager(this);
+        if (permissionManager.grantedNotifications()) {
+            return;
+        }
+        notificationPermissionPromptShown = true;
+        new MaterialAlertDialogBuilder(this, R.style.RoundedCornersDialog)
+                .setTitle(R.string.permissions_notifications_label)
+                .setMessage(R.string.permissions_notifications_description)
+                .setPositiveButton(R.string.open_notification_settings_button, (dialog, which) ->
+                        startActivity(PermissionManager.Companion.getNotificationSettingsIntent(this)))
+                .setNegativeButton(R.string.cancel, null)
+                .show();
     }
 
     @Override

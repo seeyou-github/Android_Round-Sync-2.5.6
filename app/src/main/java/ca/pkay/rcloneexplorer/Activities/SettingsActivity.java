@@ -14,7 +14,6 @@ import androidx.appcompat.widget.Toolbar;
 
 import ca.pkay.rcloneexplorer.Settings.FileAccessPreferencesFragment;
 import ca.pkay.rcloneexplorer.Settings.FileAccessSettingsFragment;
-import ca.pkay.rcloneexplorer.Settings.NotificationPreferencesFragment;
 import ca.pkay.rcloneexplorer.Settings.SettingsFragment;
 import ca.pkay.rcloneexplorer.Settings.GeneralPreferencesFragment;
 import ca.pkay.rcloneexplorer.Settings.ThemingPreferencesFragment;
@@ -91,8 +90,6 @@ public class SettingsActivity extends AppCompatActivity implements SettingsFragm
             startFileAccessSettingsFragment();
         } else if (fragment instanceof ThemingPreferencesFragment) {
             startLookAndFeelSettingsFragment();
-        } else if (fragment instanceof NotificationPreferencesFragment) {
-            startNotificationSettingsFragment();
         }
     }
 
@@ -125,13 +122,6 @@ public class SettingsActivity extends AppCompatActivity implements SettingsFragm
         transaction.commit();
     }
 
-    private void startNotificationSettingsFragment() {
-        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-        transaction.replace(R.id.flFragment, new NotificationPreferencesFragment(), SAVED_FRAGMENT);
-        transaction.addToBackStack(null);
-        transaction.commit();
-    }
-
     @Override
     public void onSettingCategoryClicked(int category) {
         switch (category) {
@@ -143,9 +133,6 @@ public class SettingsActivity extends AppCompatActivity implements SettingsFragm
                 break;
             case SettingsFragment.LOOK_AND_FEEL_SETTINGS:
                 startLookAndFeelSettingsFragment();
-                break;
-            case SettingsFragment.NOTIFICATION_SETTINGS:
-                startNotificationSettingsFragment();
                 break;
         }
     }

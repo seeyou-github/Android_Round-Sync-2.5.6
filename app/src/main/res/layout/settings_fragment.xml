@@ -189,63 +189,6 @@
 
 
         <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/notification_settings"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:clickable="true"
-            android:focusable="true">
-
-            <ImageView
-                android:id="@+id/notificationIconBackground"
-                android:layout_width="@dimen/settingsIconSize"
-                android:layout_height="@dimen/settingsIconSize"
-                android:layout_margin="@dimen/settingsIconMargin"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:srcCompat="@drawable/shape_circle"
-                app:tint="#E59308" />
-
-            <ImageView
-                android:id="@+id/notificationIcon"
-                android:layout_width="@dimen/settings_icon_image_size"
-                android:layout_height="@dimen/settings_icon_image_size"
-                android:contentDescription="@string/notification_settings_icon_content_description"
-                android:src="@drawable/ic_notifications"
-                app:layout_constraintBottom_toBottomOf="@+id/notificationIconBackground"
-                app:layout_constraintEnd_toEndOf="@+id/notificationIconBackground"
-                app:layout_constraintStart_toStartOf="@+id/notificationIconBackground"
-                app:layout_constraintTop_toTopOf="@+id/notificationIconBackground"
-                app:tint="@color/iconTint" />
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/settingsIconMargin"
-                android:layout_marginEnd="@dimen/settingsIconMargin"
-                android:orientation="vertical"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/notificationIconBackground"
-                app:layout_constraintTop_toTopOf="parent">
-
-                <TextView
-                    android:id="@+id/notificationTitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/notifications_pref_title"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/notificationDescription"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/notificationSettingsDescription" />
-            </LinearLayout>
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-        <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/importSettings"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

@@ -292,28 +292,32 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
     // this is currently only a useless mapper. It is supposed to keep this worker in sync with the ephemeral one.
     // when they are merged eventually, this can be easily extracted.
     private fun generateSuccessMessage(statusObject: StatusObject): String {
-        var message = mContext.resources.getQuantityString(
-                R.plurals.operation_success_description,
-                statusObject.getTotalTransfers(),
-                mTitle,
-                statusObject.getTotalSize(),
-                statusObject.getTotalTransfers()
-        )
-        if (statusObject.getTotalTransfers() == 0) {
-            message = mContext.resources.getString(R.string.operation_success_description_zero)
-        }
-        if (statusObject.getDeletions() > 0) {
-            message += """
-                        
-                        ${
-                mContext.getString(
-                        R.string.operation_success_description_deletions_prefix,
-                        statusObject.getDeletions()
+        val totalTransfers = statusObject.getTotalTransfers()
+        val deletions = statusObject.getDeletions()
+        val parts = ArrayList<String>()
+        if (totalTransfers > 0) {
+            parts.add(
+                mContext.resources.getQuantityString(
+                    R.plurals.operation_success_description,
+                    totalTransfers,
+                    mTitle,
+                    statusObject.getTotalSize(),
+                    totalTransfers
                 )
-            }
-                        """.trimIndent()
+            )
         }
-        return message
+        if (deletions > 0) {
+            parts.add(
+                mContext.getString(
+                    R.string.operation_success_description_deletions_prefix,
+                    deletions
+                )
+            )
+        }
+        if (parts.isEmpty()) {
+            parts.add(mContext.resources.getString(R.string.operation_success_description_zero))
+        }
+        return parts.joinToString(System.lineSeparator())
     }
 
     private fun showFailNotification(notificationId: Int, content: String, wasCancelled: Boolean = false) {

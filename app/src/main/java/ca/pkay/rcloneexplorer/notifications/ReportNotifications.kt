@@ -53,35 +53,27 @@ class ReportNotifications(var mContext: Context) {
     }
 
     fun addToSuccessReport(title: String, line: String) {
-        val content = "$title: $line\n"
+        val content = getReportLine(title, line)
         val prefMap = runBlocking { mContext.dataStore.data.first().asMap() }
         runBlocking {
             mContext.dataStore.edit { settings ->
                 val currentCounterValue: String = (prefMap[NOTIFICATION_CACHE_SUCCESS_PREFERENCE] ?: "") as String
-                if(currentCounterValue.isEmpty()) {
-                    settings[NOTIFICATION_CACHE_SUCCESS_PREFERENCE] = currentCounterValue + content
-                } else {
-                    settings[NOTIFICATION_CACHE_SUCCESS_PREFERENCE] =  content + currentCounterValue
-                }
+                settings[NOTIFICATION_CACHE_SUCCESS_PREFERENCE] = mergeReportLine(title, content, currentCounterValue)
             }
         }
     }
 
     fun showSuccessReport(title: String, line: String) {
-        val content = "$title: $line\n"
+        val content = getReportLine(title, line)
 
         val prefMap = runBlocking { mContext.dataStore.data.first().asMap() }
+        val currentCounterValue = (prefMap[NOTIFICATION_CACHE_SUCCESS_PREFERENCE] ?: "") as String
+        val notificationContent = mergeReportLine(title, content, currentCounterValue)
         runBlocking {
             mContext.dataStore.edit { settings ->
-                val currentCounterValue: String = (prefMap[NOTIFICATION_CACHE_SUCCESS_PREFERENCE] ?: "") as String
-                if(currentCounterValue.isEmpty()) {
-                    settings[NOTIFICATION_CACHE_SUCCESS_PREFERENCE] = currentCounterValue + content
-                } else {
-                    settings[NOTIFICATION_CACHE_SUCCESS_PREFERENCE] =  content + currentCounterValue
-                }
+                settings[NOTIFICATION_CACHE_SUCCESS_PREFERENCE] = notificationContent
             }
         }
-        val notificationContent: String = content + prefMap[NOTIFICATION_CACHE_SUCCESS_PREFERENCE].toString()
 
         val builder = NotificationCompat.Builder(mContext, CHANNEL_REPORT_ID)
             .setSmallIcon(R.drawable.ic_twotone_cloud_done_24)
@@ -98,6 +90,27 @@ class ReportNotifications(var mContext: Context) {
         val notificationManager = NotificationManagerCompat.from(mContext)
         notificationManager.cancel(NOTIFICATION_ID_SUCESS_REPORT)
         NotificationUtils.createNotification(mContext, NOTIFICATION_ID_SUCESS_REPORT, builder.build())
+    }
+
+    private fun getReportLine(title: String, line: String): String {
+        val compactLine = line.lines()
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .joinToString(" ")
+        return "$title: $compactLine\n"
+    }
+
+    private fun mergeReportLine(title: String, content: String, currentContent: String): String {
+        val prefix = "$title: "
+        val remainingContent = currentContent.lines()
+            .map { it.trim() }
+            .filter { it.isNotEmpty() && it.contains(": ") && !it.startsWith(prefix) }
+            .joinToString(System.lineSeparator())
+        return if (remainingContent.isEmpty()) {
+            content
+        } else {
+            content + remainingContent + System.lineSeparator()
+        }
     }
 
 

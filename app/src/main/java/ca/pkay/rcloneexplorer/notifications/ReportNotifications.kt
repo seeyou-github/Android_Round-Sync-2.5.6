@@ -79,7 +79,7 @@ class ReportNotifications(var mContext: Context) {
         val builder = NotificationCompat.Builder(mContext, CHANNEL_REPORT_ID)
             .setSmallIcon(R.drawable.ic_twotone_cloud_done_24)
             .setContentTitle(mContext.getString(R.string.operation_report_success_title))
-            .setContentText(mContext.getString(R.string.operation_report_success_short_content, notificationContent.lines().size-1))
+            .setContentText(getFirstNotificationLine(content))
             .setStyle(
                 NotificationCompat.BigTextStyle().bigText(
                     notificationContent
@@ -103,6 +103,13 @@ class ReportNotifications(var mContext: Context) {
             return reportLines.joinToString(System.lineSeparator()) + System.lineSeparator()
         }
         return "$title:${System.lineSeparator()}" + reportLines.joinToString(System.lineSeparator()) + System.lineSeparator()
+    }
+
+    private fun getFirstNotificationLine(content: String): String {
+        return content.lines()
+            .map { it.trim() }
+            .firstOrNull { it.isNotEmpty() }
+            ?: content
     }
 
     private fun mergeReportLine(title: String, content: String, currentContent: String): String {

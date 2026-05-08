@@ -170,10 +170,11 @@ class SyncServiceNotifications(var mContext: Context) {
     }
     fun showSuccessNotification(title: String, content: String, notificationId: Int) {
         val contentIntent = createSyncLogIntent(notificationId)
+        val summary = getFirstNotificationLine(content)
         val builder = NotificationCompat.Builder(mContext, CHANNEL_SUCCESS_ID)
             .setSmallIcon(R.drawable.ic_twotone_cloud_done_24)
             .setContentTitle(mContext.getString(R.string.operation_success, title))
-            .setContentText(content)
+            .setContentText(summary)
             .setStyle(
                 NotificationCompat.BigTextStyle().bigText(
                     content
@@ -184,6 +185,13 @@ class SyncServiceNotifications(var mContext: Context) {
             .setContentIntent(contentIntent)
             .setAutoCancel(true)
         NotificationUtils.createNotification(mContext, notificationId, builder.build())
+    }
+
+    private fun getFirstNotificationLine(content: String): String {
+        return content.lines()
+            .map { it.trim() }
+            .firstOrNull { it.isNotEmpty() }
+            ?: content
     }
 
     private fun createSyncLogIntent(notificationId: Int): PendingIntent {

@@ -245,6 +245,7 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
         when (failureReason) {
             FAILURE_REASON.NO_FAILURE -> {
                 showSuccessNotification(notificationId)
+                endNotificationAlreadyPosted = true
                 return
             }
             FAILURE_REASON.CANCELLED -> {

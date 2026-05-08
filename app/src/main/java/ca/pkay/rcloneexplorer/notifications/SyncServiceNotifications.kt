@@ -153,18 +153,16 @@ class SyncServiceNotifications(var mContext: Context) {
         content: String,
         notificationId: Int
     ) {
+        showSuccessNotification(title, content, notificationId)
 
         if(!useReports()){
-            showSuccessNotification(title, content, notificationId)
             return
         }
 
         if(mReportManager.getSucesses()<=1) {
-            showSuccessNotification(title, content, notificationId)
             mReportManager.lastSuccededNotification(notificationId)
             mReportManager.addToSuccessReport(title, content)
         } else {
-            mReportManager.cancelLastSuccededNotification()
             mReportManager.showSuccessReport(title, content)
         }
     }

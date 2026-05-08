@@ -167,7 +167,7 @@ public class MainActivity extends AppCompatActivity
                 AppShortcutsHelper.populateAppShortcuts(this, rclone.getRemotes());
             }
 
-            startRemotesFragment();
+            startTasksFragment();
 
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putInt(getString(R.string.pref_key_version_code), currentVersionCode);
@@ -182,7 +182,7 @@ public class MainActivity extends AppCompatActivity
                 transaction.replace(R.id.flFragment, fragment, FILE_EXPLORER_FRAGMENT_TAG);
                 transaction.commit();
             } else {
-                startRemotesFragment();
+                startTasksFragment();
             }
         } else if (bundle != null && bundle.containsKey(AppShortcutsHelper.APP_SHORTCUT_REMOTE_NAME)) {
             String remoteName = bundle.getString(AppShortcutsHelper.APP_SHORTCUT_REMOTE_NAME);
@@ -195,7 +195,7 @@ public class MainActivity extends AppCompatActivity
                 finish();
             }
         } else {
-            startRemotesFragment();
+            startTasksFragment();
         }
 
         if(MAIN_ACTIVITY_START_LOG.equals(intent.getAction())){
@@ -574,11 +574,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onOtherLogsSelected() {
         startLogFragment();
-    }
-
-    @Override
-    public void onOtherRemotesSelected() {
-        startRemotesFragment();
     }
 
     private void warnUserAboutOverwritingConfiguration() {

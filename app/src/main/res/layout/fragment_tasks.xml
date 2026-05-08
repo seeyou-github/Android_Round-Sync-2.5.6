@@ -72,17 +72,17 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
-            android:paddingStart="10dp"
-            android:paddingTop="24dp"
-            android:paddingEnd="10dp"
-            android:paddingBottom="112dp"
+            android:paddingStart="8dp"
+            android:paddingTop="8dp"
+            android:paddingEnd="8dp"
+            android:paddingBottom="72dp"
             tools:listitem="@layout/fragment_tasks_item">
 
         </androidx.recyclerview.widget.RecyclerView>
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/newTask"
-            android:layout_width="358dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="@dimen/activity_vertical_margin"
             android:layout_marginBottom="@dimen/activity_horizontal_margin"

@@ -422,6 +422,10 @@
     <string name="sync_log_notification_download_count">Downloaded files: %1$d</string>
     <string name="sync_log_notification_remote_delete_count">Deleted remote files: %1$d</string>
     <string name="sync_log_notification_local_delete_count">Deleted local files: %1$d</string>
+    <string name="sync_log_notification_upload_count_prefix">Uploaded files:</string>
+    <string name="sync_log_notification_download_count_prefix">Downloaded files:</string>
+    <string name="sync_log_notification_remote_delete_count_prefix">Deleted remote files:</string>
+    <string name="sync_log_notification_local_delete_count_prefix">Deleted local files:</string>
     <string name="sync_log_notification_no_work">No sync needed for this task</string>
     <string name="sync_log_summary_no_work">Task: %1$s no sync needed</string>
     <plurals name="modern_prettyprint_duration_d">

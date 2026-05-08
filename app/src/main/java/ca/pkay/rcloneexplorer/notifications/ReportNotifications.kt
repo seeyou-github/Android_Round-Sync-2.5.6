@@ -114,6 +114,7 @@ class ReportNotifications(var mContext: Context) {
                 it.isNotEmpty()
                         && !it.startsWith(prefix)
                         && !it.contains(title)
+                        && isCurrentSyncReportLine(it)
             }
             .joinToString(System.lineSeparator())
         return if (remainingContent.isEmpty()) {
@@ -121,6 +122,14 @@ class ReportNotifications(var mContext: Context) {
         } else {
             content + remainingContent + System.lineSeparator()
         }
+    }
+
+    private fun isCurrentSyncReportLine(line: String): Boolean {
+        return line.contains(mContext.getString(R.string.sync_log_notification_no_work))
+                || line.contains(mContext.getString(R.string.sync_log_notification_upload_count_prefix))
+                || line.contains(mContext.getString(R.string.sync_log_notification_download_count_prefix))
+                || line.contains(mContext.getString(R.string.sync_log_notification_remote_delete_count_prefix))
+                || line.contains(mContext.getString(R.string.sync_log_notification_local_delete_count_prefix))
     }
 
 

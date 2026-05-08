@@ -1,6 +1,7 @@
 name: Android ARM64 APK with Prebuilt rclone(1.74.0)
 
 on:
+  push:
   workflow_dispatch:
     inputs:
       rclone_download_url:

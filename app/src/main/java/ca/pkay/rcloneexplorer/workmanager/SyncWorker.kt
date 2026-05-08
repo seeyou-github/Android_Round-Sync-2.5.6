@@ -476,8 +476,13 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
             CurrentSyncDetails.append(mContext, getString(R.string.sync_pause_not_supported))
             return
         }
+        val processId = getProcessId(process)
+        if (processId == null) {
+            CurrentSyncDetails.append(mContext, getString(R.string.sync_pause_not_supported))
+            return
+        }
         val signal = if (isPaused) 18 else 19
-        AndroidProcess.sendSignal(process.pid().toInt(), signal)
+        AndroidProcess.sendSignal(processId, signal)
         isPaused = !isPaused
         val content = getString(if (isPaused) R.string.sync_paused else R.string.sync_resumed)
         CurrentSyncDetails.append(mContext, content)
@@ -489,6 +494,25 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
             ongoingNotificationID,
             isPaused
         ))
+    }
+
+    private fun getProcessId(process: java.lang.Process): Int? {
+        try {
+            val pidMethod = process.javaClass.getMethod("pid")
+            return (pidMethod.invoke(process) as Long).toInt()
+        } catch (e: ReflectiveOperationException) {
+            FLog.e(TAG, "Could not read process pid with pid method", e)
+        } catch (e: ClassCastException) {
+            FLog.e(TAG, "Could not cast process pid", e)
+        }
+        return try {
+            val pidField = process.javaClass.getDeclaredField("pid")
+            pidField.isAccessible = true
+            pidField.getInt(process)
+        } catch (e: ReflectiveOperationException) {
+            FLog.e(TAG, "Could not read process pid field", e)
+            null
+        }
     }
 
 }

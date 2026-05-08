@@ -10,6 +10,7 @@ import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import ca.pkay.rcloneexplorer.R
+import ca.pkay.rcloneexplorer.util.FLog
 
 class GenericSyncNotification(var mContext: Context) {
 
@@ -70,6 +71,15 @@ class GenericSyncNotification(var mContext: Context) {
             notificationManager.createNotificationChannelGroup(NotificationChannelGroup(groupID, groupDescription))
             channel.group = groupID
             notificationManager.createNotificationChannel(channel)
+            val currentChannel = notificationManager.getNotificationChannel(channelID)
+            FLog.e(
+                "GenericSyncNotification",
+                "setNotificationChannel: channel=%s name=%s importance=%d group=%s",
+                channelID,
+                channelName,
+                currentChannel?.importance ?: -1,
+                groupID
+            )
         }
     }
 

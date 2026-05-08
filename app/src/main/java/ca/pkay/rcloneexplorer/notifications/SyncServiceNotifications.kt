@@ -4,6 +4,8 @@ import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Handler
+import android.os.Looper
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.work.WorkManager
@@ -29,11 +31,11 @@ class SyncServiceNotifications(var mContext: Context) {
         const val PERSISTENT_NOTIFICATION_ID_FOR_SYNC = 162
         const val CANCEL_ID_NOTSET = "CANCEL_ID_NOTSET"
         const val TAG = "SyncServiceNotifications"
+        private const val RESULT_NOTIFICATION_DELAY_MS = 800L
 
     }
 
     private val OPERATION_FAILED_GROUP = "ca.pkay.rcexplorer.OPERATION_FAILED_GROUP"
-    private val OPERATION_SUCCESS_GROUP = "ca.pkay.rcexplorer.OPERATION_SUCCESS_GROUP"
 
 
     private var mCancelUnsetId: UUID = UUID.randomUUID()
@@ -49,6 +51,7 @@ class SyncServiceNotifications(var mContext: Context) {
         notificationId: Int,
         taskid: Long
     ) {
+        FLog.e(TAG, "showFailedNotificationOrReport: notificationId=%d taskId=%d content=%s", notificationId, taskid, content)
         showFailedNotification(content, notificationId, taskid)
     }
 
@@ -59,6 +62,7 @@ class SyncServiceNotifications(var mContext: Context) {
     ) {
         val i = Intent(mContext, SyncRestartAction::class.java)
         i.putExtra(EXTRA_TASK_ID, taskid)
+        FLog.e(TAG, "showFailedNotification build: notificationId=%d taskId=%d channel=%s", notificationId, taskid, CHANNEL_FAIL_ID)
 
         val retryPendingIntent = PendingIntent.getService(mContext, taskid.toInt(), i, GenericSyncNotification.getFlags())
         val contentIntent = createSyncLogIntent(notificationId)
@@ -122,11 +126,23 @@ class SyncServiceNotifications(var mContext: Context) {
         content: String,
         notificationId: Int
     ) {
+        FLog.e(TAG, "showSuccessNotificationOrReport: title=%s notificationId=%d content=%s",
+            title,
+            notificationId,
+            content.replace("\n", " | ")
+        )
         showSuccessNotification(title, content, notificationId)
     }
     fun showSuccessNotification(title: String, content: String, notificationId: Int) {
         val contentIntent = createSyncLogIntent(notificationId)
         val summary = getFirstNotificationLine(content)
+        FLog.e(TAG, "showSuccessNotification build: title=%s notificationId=%d channel=%s summary=%s delayMs=%d",
+            title,
+            notificationId,
+            CHANNEL_SUCCESS_ID,
+            summary,
+            RESULT_NOTIFICATION_DELAY_MS
+        )
         val builder = NotificationCompat.Builder(mContext, CHANNEL_SUCCESS_ID)
             .setSmallIcon(R.drawable.ic_twotone_cloud_done_24)
             .setContentTitle(mContext.getString(R.string.operation_success, title))
@@ -136,11 +152,14 @@ class SyncServiceNotifications(var mContext: Context) {
                     content
                 )
             )
-            .setGroup(OPERATION_SUCCESS_GROUP)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setContentIntent(contentIntent)
             .setAutoCancel(true)
-        NotificationUtils.createNotification(mContext, notificationId, builder.build())
+        FLog.e(TAG, "showSuccessNotification scheduled: title=%s notificationId=%d", title, notificationId)
+        Handler(Looper.getMainLooper()).postDelayed({
+            FLog.e(TAG, "showSuccessNotification posting after delay: title=%s notificationId=%d", title, notificationId)
+            NotificationUtils.createNotification(mContext, notificationId, builder.build())
+        }, RESULT_NOTIFICATION_DELAY_MS)
     }
 
     private fun getFirstNotificationLine(content: String): String {
@@ -197,6 +216,14 @@ class SyncServiceNotifications(var mContext: Context) {
             FLog.e(TAG, "Missing notification content!")
             return null
         }
+        FLog.e(TAG, "updateSyncNotification build: notificationId=%d channel=%s title=%s content=%s percent=%d paused=%s",
+            notificationId,
+            CHANNEL_ID,
+            title,
+            content,
+            percent,
+            paused.toString()
+        )
 
         val builder = GenericSyncNotification(mContext).updateGenericNotification(
             title,
@@ -240,6 +267,7 @@ class SyncServiceNotifications(var mContext: Context) {
     }
 
     fun cancelSyncNotification(notificationId: Int) {
+        FLog.e(TAG, "cancelSyncNotification: notificationId=%d", notificationId)
         val notificationManagerCompat = NotificationManagerCompat.from(mContext)
         notificationManagerCompat.cancel(notificationId)
     }

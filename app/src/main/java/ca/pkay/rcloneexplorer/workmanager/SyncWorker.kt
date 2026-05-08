@@ -98,6 +98,9 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
 
         prepareNotifications()
         registerBroadcastReceivers()
+        if (sIsLoggingEnabled) {
+            log2File = Log2File(mContext)
+        }
         CurrentSyncDetails.clear(mContext)
         CurrentSyncDetails.append(mContext, getString(R.string.current_sync_details_started))
 
@@ -191,7 +194,7 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
                 val iterator = reader.lineSequence().iterator()
                 while(iterator.hasNext()) {
                     val line = iterator.next()
-                    CurrentSyncDetails.append(mContext, line)
+                    CurrentSyncDetails.appendRcloneLine(mContext, line)
                     try {
                         val logline = JSONObject(line)
                         //todo: migrate this to StatusObject, so that we can handle everything properly.
@@ -207,9 +210,6 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
                         }
 
                         val notificationContent = statusObject.getCurrentTransferSummary()
-                        if (notificationContent.isNotBlank()) {
-                            CurrentSyncDetails.append(mContext, "STATUS: $notificationContent")
-                        }
                         updateForegroundNotification(mNotificationManager.updateSyncNotification(
                             title,
                             notificationContent,

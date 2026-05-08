@@ -1,16 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.recyclerview.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/current_sync_details_list"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:clipToPadding="false"
-    android:padding="12dp">
-
-    <TextView
-        android:id="@+id/current_sync_details_text"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:fontFamily="monospace"
-        android:textColor="?attr/colorOnSurface"
-        android:textIsSelectable="true"
-        android:textSize="12sp" />
-</ScrollView>
+    android:fadeScrollbars="false"
+    android:padding="12dp"
+    android:scrollbars="vertical" />

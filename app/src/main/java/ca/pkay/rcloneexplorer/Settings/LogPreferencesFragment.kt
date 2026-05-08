@@ -42,8 +42,8 @@ class LogPreferencesFragment : PreferenceFragmentCompat() {
             true
         }
         useLogsPreference.setOnPreferenceChangeListener { _, newValue ->
-            if (newValue == true && !hasValidLogLocation()) {
-                Toast.makeText(context, R.string.log_location_required, Toast.LENGTH_LONG).show()
+            if (newValue == true && hasConfiguredInvalidLogLocation()) {
+                Toast.makeText(context, R.string.log_location_no_permission, Toast.LENGTH_LONG).show()
                 false
             } else {
                 true
@@ -114,17 +114,17 @@ class LogPreferencesFragment : PreferenceFragmentCompat() {
         } else {
             logLocationPreference.setSummary(R.string.log_location_not_set)
         }
-        val validLocation = hasValidLogLocation()
-        useLogsPreference.isEnabled = validLocation
-        if (!validLocation) {
+        val invalidConfiguredLocation = hasConfiguredInvalidLogLocation()
+        useLogsPreference.isEnabled = !invalidConfiguredLocation
+        if (invalidConfiguredLocation) {
             useLogsPreference.isChecked = false
             sharedPreferences.edit().putBoolean(getString(R.string.pref_key_logs), false).apply()
         }
     }
 
-    private fun hasValidLogLocation(): Boolean {
+    private fun hasConfiguredInvalidLogLocation(): Boolean {
         val uriString = sharedPreferences.getString(getString(R.string.pref_key_log_location_uri), "") ?: ""
-        return uriString.isNotEmpty() && hasPersistedWritePermission(Uri.parse(uriString))
+        return uriString.isNotEmpty() && !hasPersistedWritePermission(Uri.parse(uriString))
     }
 
     private fun hasPersistedWritePermission(uri: Uri): Boolean {

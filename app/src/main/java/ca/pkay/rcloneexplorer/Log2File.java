@@ -14,9 +14,14 @@ import androidx.preference.PreferenceManager;
 import ca.pkay.rcloneexplorer.util.FLog;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -25,7 +30,7 @@ public class Log2File {
     private static final String TAG = "Log2File";
     private static final String LOG_FILE_NAME = "log.txt";
     private static final String LOG_MIME_TYPE = "text/plain";
-    private Context context;
+    private final Context context;
 
     public Log2File(Context context) {
         this.context = context;
@@ -35,43 +40,25 @@ public class Log2File {
         @SuppressLint("SimpleDateFormat")
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String currentDateTime = dateFormat.format(new Date());
-
-        String logMessage = currentDateTime + " - " + message + "\n";
-
-        Uri logLocation = getConfiguredLogLocation(context);
-        if (logLocation != null) {
-            new WriteToUri(context.getApplicationContext(), logLocation, logMessage).execute();
-            return;
-        }
-
-        File path = context.getExternalFilesDir("logs");
-        File logFile = new File(path, LOG_FILE_NAME);
-        clearLogsIfTooBif(logFile);
-        new WriteToFile(logFile, logMessage).execute();
+        new WriteLogMessage(context.getApplicationContext(), LOG_FILE_NAME, currentDateTime + " - " + message + "\n").execute();
     }
 
-    private void clearLogsIfTooBif(File logFile) {
-        int fileSize = Integer.parseInt(String.valueOf(logFile.length() / 1024));
-        if (fileSize > 10000000) { // 10 MB
-            logFile.delete();
-        }
-    }
+    private static class WriteLogMessage extends AsyncTask<Void, Void, Void> {
 
-    private static class WriteToFile extends AsyncTask<Void, Void, Void> {
+        private final Context context;
+        private final String fileName;
+        private final String logMessage;
 
-        private File logFile;
-        private String logMessage;
-
-        WriteToFile(File logFile, String logMessage) {
-            this.logFile = logFile;
+        WriteLogMessage(Context context, String fileName, String logMessage) {
+            this.context = context;
+            this.fileName = fileName;
             this.logMessage = logMessage;
         }
+
         @Override
         protected Void doInBackground(Void... voids) {
             try {
-                FileOutputStream stream = new FileOutputStream(logFile, true);
-                stream.write(logMessage.getBytes());
-                stream.close();
+                append(context, fileName, logMessage);
             } catch (IOException e) {
                 FLog.e(TAG, "Could not write log file", e);
             }
@@ -90,7 +77,7 @@ public class Log2File {
 
     public static boolean testLogLocation(Context context, Uri treeUri) {
         try {
-            writeToTree(context, treeUri, "Round Sync log location test\n");
+            writeToTree(context, treeUri, LOG_FILE_NAME, "Round Sync log location test\n");
             return true;
         } catch (IOException | RuntimeException e) {
             FLog.e(TAG, "Could not test log file location", e);
@@ -98,44 +85,128 @@ public class Log2File {
         }
     }
 
-    private static class WriteToUri extends AsyncTask<Void, Void, Void> {
-
-        private final Context context;
-        private final Uri treeUri;
-        private final String logMessage;
-
-        WriteToUri(Context context, Uri treeUri, String logMessage) {
-            this.context = context;
-            this.treeUri = treeUri;
-            this.logMessage = logMessage;
+    public static synchronized void append(Context context, String fileName, String logMessage) throws IOException {
+        Uri logLocation = getConfiguredLogLocation(context);
+        if (logLocation != null) {
+            writeToTree(context, logLocation, fileName, logMessage);
+            return;
         }
 
-        @Override
-        protected Void doInBackground(Void... voids) {
-            try {
-                writeToTree(context, treeUri, logMessage);
-            } catch (IOException | RuntimeException e) {
-                FLog.e(TAG, "Could not write log file", e);
-            }
-            return null;
+        File logFile = getPrivateLogFile(context, fileName);
+        int fileSize = Integer.parseInt(String.valueOf(logFile.length() / 1024));
+        if (fileSize > 10000000) {
+            logFile.delete();
+        }
+        try (FileOutputStream stream = new FileOutputStream(logFile, true)) {
+            stream.write(logMessage.getBytes(StandardCharsets.UTF_8));
         }
     }
 
-    private static void writeToTree(Context context, Uri treeUri, String logMessage) throws IOException {
-        Uri logUri = findOrCreateLogFile(context, treeUri);
+    public static synchronized String read(Context context, String fileName) {
+        Uri logLocation = getConfiguredLogLocation(context);
+        if (logLocation != null) {
+            try {
+                Uri fileUri = findLogFile(context, logLocation, fileName);
+                if (fileUri == null) {
+                    return "";
+                }
+                try (InputStream stream = context.getContentResolver().openInputStream(fileUri)) {
+                    return readStream(stream);
+                }
+            } catch (IOException | RuntimeException e) {
+                FLog.e(TAG, "Could not read configured log file", e);
+                return "";
+            }
+        }
+
+        File logFile = getPrivateLogFile(context, fileName);
+        if (!logFile.exists()) {
+            return "";
+        }
+        try (InputStream stream = new FileInputStream(logFile)) {
+            return readStream(stream);
+        } catch (IOException e) {
+            FLog.e(TAG, "Could not read private log file", e);
+            return "";
+        }
+    }
+
+    public static synchronized void delete(Context context, String fileName) {
+        Uri logLocation = getConfiguredLogLocation(context);
+        if (logLocation != null) {
+            try {
+                Uri fileUri = findLogFile(context, logLocation, fileName);
+                if (fileUri != null) {
+                    DocumentsContract.deleteDocument(context.getContentResolver(), fileUri);
+                }
+                return;
+            } catch (IOException | RuntimeException e) {
+                FLog.e(TAG, "Could not delete configured log file", e);
+            }
+        }
+
+        File logFile = getPrivateLogFile(context, fileName);
+        if (logFile.exists()) {
+            logFile.delete();
+        }
+    }
+
+    public static void deleteErrorLog(Context context) {
+        delete(context, LOG_FILE_NAME);
+    }
+
+    private static String readStream(InputStream stream) throws IOException {
+        if (stream == null) {
+            return "";
+        }
+        StringBuilder output = new StringBuilder();
+        try (Reader reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
+            char[] buffer = new char[4096];
+            for (int read; (read = reader.read(buffer, 0, buffer.length)) > 0; ) {
+                output.append(buffer, 0, read);
+            }
+        }
+        return output.toString();
+    }
+
+    private static File getPrivateLogFile(Context context, String fileName) {
+        File path = context.getExternalFilesDir("logs");
+        if (path == null) {
+            path = context.getFilesDir();
+        }
+        if (!path.exists()) {
+            path.mkdirs();
+        }
+        return new File(path, fileName);
+    }
+
+    private static void writeToTree(Context context, Uri treeUri, String fileName, String logMessage) throws IOException {
+        Uri logUri = findOrCreateLogFile(context, treeUri, fileName);
         try (OutputStream stream = context.getContentResolver().openOutputStream(logUri, "wa")) {
             if (stream == null) {
                 throw new IOException("Could not open log file");
             }
-            stream.write(logMessage.getBytes());
+            stream.write(logMessage.getBytes(StandardCharsets.UTF_8));
         }
     }
 
-    private static Uri findOrCreateLogFile(Context context, Uri treeUri) throws IOException {
+    private static Uri findOrCreateLogFile(Context context, Uri treeUri, String fileName) throws IOException {
+        Uri existing = findLogFile(context, treeUri, fileName);
+        if (existing != null) {
+            return existing;
+        }
         Uri parentUri = DocumentsContract.buildDocumentUriUsingTree(
                 treeUri,
                 DocumentsContract.getTreeDocumentId(treeUri)
         );
+        Uri created = DocumentsContract.createDocument(context.getContentResolver(), parentUri, LOG_MIME_TYPE, fileName);
+        if (created == null) {
+            throw new IOException("Could not create log file");
+        }
+        return created;
+    }
+
+    private static Uri findLogFile(Context context, Uri treeUri, String fileName) throws IOException {
         ContentResolver resolver = context.getContentResolver();
         Uri childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(
                 treeUri,
@@ -150,16 +221,12 @@ public class Log2File {
                 int idIndex = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DOCUMENT_ID);
                 int nameIndex = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DISPLAY_NAME);
                 while (cursor.moveToNext()) {
-                    if (LOG_FILE_NAME.equals(cursor.getString(nameIndex))) {
+                    if (fileName.equals(cursor.getString(nameIndex))) {
                         return DocumentsContract.buildDocumentUriUsingTree(treeUri, cursor.getString(idIndex));
                     }
                 }
             }
         }
-        Uri created = DocumentsContract.createDocument(resolver, parentUri, LOG_MIME_TYPE, LOG_FILE_NAME);
-        if (created == null) {
-            throw new IOException("Could not create log file");
-        }
-        return created;
+        return null;
     }
 }

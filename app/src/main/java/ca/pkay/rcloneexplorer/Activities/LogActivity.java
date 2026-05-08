@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import ca.pkay.rcloneexplorer.Fragments.LogFragment;
+import ca.pkay.rcloneexplorer.Log2File;
 import ca.pkay.rcloneexplorer.R;
 import ca.pkay.rcloneexplorer.RuntimeConfiguration;
 import ca.pkay.rcloneexplorer.util.ActivityHelper;
@@ -61,6 +62,7 @@ public class LogActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == MENU_CLEAR_LOGS) {
             SyncLog.delete(this);
+            Log2File.deleteErrorLog(this);
             LogFragment fragment = (LogFragment) getSupportFragmentManager().findFragmentByTag(LOG_FRAGMENT_TAG);
             if (fragment != null) {
                 fragment.refreshLogs();

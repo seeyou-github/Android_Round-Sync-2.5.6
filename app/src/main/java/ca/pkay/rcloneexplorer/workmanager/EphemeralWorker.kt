@@ -88,6 +88,9 @@ class EphemeralWorker (private var mContext: Context, workerParams: WorkerParame
     override fun doWork(): Result {
 
         registerBroadcastReceivers()
+        if (sIsLoggingEnabled) {
+            log2File = Log2File(mContext)
+        }
 
         updateForegroundNotification(mNotificationManager?.updateNotification(
             mTitle,

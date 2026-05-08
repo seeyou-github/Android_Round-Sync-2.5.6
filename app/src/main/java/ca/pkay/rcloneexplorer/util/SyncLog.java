@@ -1,14 +1,14 @@
 package ca.pkay.rcloneexplorer.util;
 
 import android.content.Context;
-import android.util.Log;
+
+import ca.pkay.rcloneexplorer.Log2File;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -27,6 +27,7 @@ import java.util.Collections;
 
 public class SyncLog {
 
+    private static final String LOG_FILE_NAME = "sync.log";
     private static int loglength = 4;
 
     public static String TIMESTAMP = "timestamp";
@@ -37,23 +38,12 @@ public class SyncLog {
     public static final int TYPE_INFO = 1;
 
     public static ArrayList<JSONObject> getLog(Context c){
-        File log = new File(c.getFilesDir().getPath() + "/sync.log");
-        StringBuilder file = new StringBuilder();
-        if (!log.exists()) {
-            return new ArrayList<>();
-        }
-        try {
-            char[] buffer = new char[4096];
-            InputStream inputStream = new FileInputStream(log);
-            Reader in = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
-            for (int numRead; (numRead = in.read(buffer, 0, buffer.length)) > 0; ) {
-                file.append(buffer, 0, numRead);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+        String file = Log2File.read(c, LOG_FILE_NAME);
+        if (file.isEmpty() && Log2File.getConfiguredLogLocation(c) == null) {
+            file = readLegacyPrivateLog(c);
         }
 
-        String lines[] = file.toString().split("\\r?\\n");
+        String lines[] = file.split("\\r?\\n");
 
         ArrayList<JSONObject> jsons = new ArrayList<>();
         for (int i = 0; i < lines.length; i++) {
@@ -67,14 +57,8 @@ public class SyncLog {
     }
 
     private static void appendLog(Context c, String entry){
-
-        File log = new File(c.getFilesDir().getPath() + "/sync.log");
         try {
-            FileWriter writer = new FileWriter(log, true);
-            writer.append(System.lineSeparator());
-            writer.append(entry);
-            writer.flush();
-            writer.close();
+            Log2File.append(c, LOG_FILE_NAME, entry + System.lineSeparator());
         } catch (Exception e){
             e.printStackTrace();
         }
@@ -104,14 +88,31 @@ public class SyncLog {
     }
 
     public static void delete(Context c){
-        File log = new File(c.getFilesDir().getPath() + "/sync.log");
-        if (log.exists()) {
-            if (log.delete()) {
-                System.out.println("file Deleted");
-            } else {
-                System.out.println("file not Deleted");
-            }
+        Log2File.delete(c, LOG_FILE_NAME);
+        File legacyLog = new File(c.getFilesDir(), LOG_FILE_NAME);
+        if (legacyLog.exists() && !legacyLog.delete()) {
+            System.out.println("legacy sync log not Deleted");
         }
+    }
+
+    private static String readLegacyPrivateLog(Context c) {
+        File log = new File(c.getFilesDir(), LOG_FILE_NAME);
+        if (!log.exists()) {
+            return "";
+        }
+        StringBuilder file = new StringBuilder();
+        try {
+            char[] buffer = new char[4096];
+            InputStream inputStream = new FileInputStream(log);
+            Reader in = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
+            for (int numRead; (numRead = in.read(buffer, 0, buffer.length)) > 0; ) {
+                file.append(buffer, 0, numRead);
+            }
+            in.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return file.toString();
     }
 
 }

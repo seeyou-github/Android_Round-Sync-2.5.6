@@ -32,8 +32,6 @@ class SyncServiceNotifications(var mContext: Context) {
 
     }
 
-    private var mReportManager = ReportNotifications(mContext)
-
     private val OPERATION_FAILED_GROUP = "ca.pkay.rcexplorer.OPERATION_FAILED_GROUP"
     private val OPERATION_SUCCESS_GROUP = "ca.pkay.rcexplorer.OPERATION_SUCCESS_GROUP"
 
@@ -46,19 +44,12 @@ class SyncServiceNotifications(var mContext: Context) {
     }
 
     fun showFailedNotificationOrReport(
-        title: String,
+        _title: String,
         content: String,
         notificationId: Int,
         taskid: Long
     ) {
-        if(mReportManager.getFailures()<=1) {
-            showFailedNotification(content, notificationId, taskid)
-            mReportManager.lastFailedNotification(notificationId)
-            mReportManager.addToFailureReport(title, content)
-        } else {
-            mReportManager.cancelLastFailedNotification()
-            mReportManager.showFailReport(title, content)
-        }
+        showFailedNotification(content, notificationId, taskid)
     }
 
     fun showFailedNotification(
@@ -94,15 +85,7 @@ class SyncServiceNotifications(var mContext: Context) {
         notificationId: Int,
         taskid: Long) {
 
-        var title = mContext.getString(R.string.operation_failed_cancelled)
-        if(mReportManager.getFailures()<=1) {
-            showCancelledNotification(content, notificationId, taskid)
-            mReportManager.lastFailedNotification(notificationId)
-            mReportManager.addToFailureReport(title, content)
-        } else {
-            mReportManager.cancelLastFailedNotification()
-            mReportManager.showFailReport(title, content)
-        }
+        showCancelledNotification(content, notificationId, taskid)
     }
 
     fun showCancelledNotification(
@@ -140,13 +123,6 @@ class SyncServiceNotifications(var mContext: Context) {
         notificationId: Int
     ) {
         showSuccessNotification(title, content, notificationId)
-
-        if(mReportManager.getSucesses()<=1) {
-            mReportManager.lastSuccededNotification(notificationId)
-            mReportManager.addToSuccessReport(title, content)
-        } else {
-            mReportManager.showSuccessReport(title, content)
-        }
     }
     fun showSuccessNotification(title: String, content: String, notificationId: Int) {
         val contentIntent = createSyncLogIntent(notificationId)

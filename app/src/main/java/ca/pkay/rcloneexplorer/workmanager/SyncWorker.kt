@@ -20,7 +20,6 @@ import ca.pkay.rcloneexplorer.Items.Task
 import ca.pkay.rcloneexplorer.R
 import ca.pkay.rcloneexplorer.Rclone
 import ca.pkay.rcloneexplorer.notifications.GenericSyncNotification
-import ca.pkay.rcloneexplorer.notifications.ReportNotifications
 import ca.pkay.rcloneexplorer.notifications.SyncServiceNotifications
 import ca.pkay.rcloneexplorer.notifications.SyncServiceNotifications.Companion.GROUP_ID
 import ca.pkay.rcloneexplorer.notifications.support.StatusObject
@@ -353,14 +352,6 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
                 GROUP_ID,
                 getString(R.string.sync_service_notification_group)
         )
-        GenericSyncNotification(mContext).setNotificationChannel(
-            ReportNotifications.CHANNEL_REPORT_ID,
-            getString(R.string.sync_service_notification_channel_report_title),
-            getString(R.string.sync_service_notification_channel_report_description),
-                GROUP_ID,
-                getString(R.string.sync_service_notification_group)
-        )
-
     }
 
     private fun sendUploadFinishedBroadcast(remote: String, path: String?) {

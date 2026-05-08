@@ -235,7 +235,7 @@ class SyncServiceNotifications(var mContext: Context) {
         }
 
         val builder = GenericSyncNotification(mContext).updateGenericNotification(
-            mContext.getString(R.string.syncing_service, title),
+            title,
             content,
             R.drawable.ic_twotone_rounded_cloud_sync_24,
             bigTextArray,

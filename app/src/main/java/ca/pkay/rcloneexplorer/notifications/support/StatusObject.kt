@@ -3,6 +3,7 @@ package ca.pkay.rcloneexplorer.notifications.support
 import android.content.Context
 import android.text.format.Formatter
 import android.util.Log
+import ca.pkay.rcloneexplorer.Items.SyncDirectionObject
 import ca.pkay.rcloneexplorer.R
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
@@ -79,6 +80,81 @@ class StatusObject(var mContext: Context){
             )
         } else {
             notificationContent
+        }
+    }
+
+    fun getTaskTransferNotificationTitle(taskName: String, direction: Int): String {
+        val taskType = when (direction) {
+            SyncDirectionObject.SYNC_LOCAL_TO_REMOTE -> mContext.getString(R.string.sync_notification_task_type_sync_to_remote)
+            SyncDirectionObject.SYNC_REMOTE_TO_LOCAL -> mContext.getString(R.string.sync_notification_task_type_sync_to_local)
+            SyncDirectionObject.COPY_LOCAL_TO_REMOTE -> mContext.getString(R.string.sync_notification_task_type_copy_to_remote)
+            SyncDirectionObject.COPY_REMOTE_TO_LOCAL -> mContext.getString(R.string.sync_notification_task_type_copy_to_local)
+            else -> mContext.getString(R.string.sync_notification_task_type_sync)
+        }
+        return mContext.getString(R.string.sync_notification_task_title, taskName, taskType)
+    }
+
+    fun getTaskTransferNotificationLines(taskName: String, direction: Int): ArrayList<String> {
+        val lines = ArrayList<String>()
+        lines.add(getTaskTransferNotificationTitle(taskName, direction))
+
+        val transfers = mStats.optJSONArray("transferring")
+        val transferObject = if (transfers != null && transfers.length() > 0) transfers.optJSONObject(0) else null
+        val filename = transferObject?.optString("name", "") ?: ""
+        val transferred = Formatter.formatFileSize(mContext, transferObject?.optLong("bytes", 0) ?: 0L)
+        val total = Formatter.formatFileSize(mContext, transferObject?.optLong("size", 0) ?: 0L)
+        val isToRemote = direction == SyncDirectionObject.SYNC_LOCAL_TO_REMOTE
+                || direction == SyncDirectionObject.COPY_LOCAL_TO_REMOTE
+        val isSync = direction == SyncDirectionObject.SYNC_LOCAL_TO_REMOTE
+                || direction == SyncDirectionObject.SYNC_REMOTE_TO_LOCAL
+
+        if (filename.isNotEmpty()) {
+            lines.add(
+                mContext.getString(
+                    if (isToRemote) R.string.sync_notification_uploading_file else R.string.sync_notification_downloading_file,
+                    filename,
+                    transferred,
+                    total
+                )
+            )
+        }
+
+        val pendingTransferCount = (getTotalTransfers() - getTransfers()).coerceAtLeast(0)
+        val pendingTransferSize = Formatter.formatFileSize(
+            mContext,
+            (mStats.optLong("totalBytes", 0) - mStats.optLong("bytes", 0)).coerceAtLeast(0L)
+        )
+        lines.add(
+            mContext.getString(
+                if (isToRemote) R.string.sync_notification_pending_upload_count else R.string.sync_notification_pending_download_count,
+                pendingTransferCount
+            )
+        )
+        lines.add(
+            mContext.getString(
+                if (isToRemote) R.string.sync_notification_pending_upload_size else R.string.sync_notification_pending_download_size,
+                pendingTransferSize
+            )
+        )
+
+        val deletions = getDeletions()
+        if (isSync && deletions > 0) {
+            lines.add(
+                mContext.getString(
+                    if (isToRemote) R.string.sync_notification_pending_remote_delete_count else R.string.sync_notification_pending_local_delete_count,
+                    deletions
+                )
+            )
+        }
+        return lines
+    }
+
+    fun getTaskTransferNotificationContent(taskName: String, direction: Int): String {
+        val lines = getTaskTransferNotificationLines(taskName, direction)
+        return if (lines.size > 1) {
+            lines[1]
+        } else {
+            lines[0]
         }
     }
 

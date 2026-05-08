@@ -157,6 +157,14 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
             mTitle = mTask.remotePath
         }
         CurrentSyncDetails.startTask(mContext, mTitle, mTask.direction, mTask.localPath)
+        updateForegroundNotification(mNotificationManager.updateSyncNotification(
+            statusObject.getTaskTransferNotificationTitle(mTitle, mTask.direction),
+            mContext.getString(R.string.current_sync_details_started),
+            ArrayList(),
+            0,
+            ongoingNotificationID,
+            isPaused
+        ))
         if(arePreconditionsMet()) {
             sRcloneProcess = mRclone.sync(
                 remoteItem,
@@ -190,11 +198,12 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
                             statusObject.parseLoglineToStatusObject(logline)
                         }
 
-                        val notificationContent = statusObject.getCurrentTransferSummary()
+                        val notificationTitle = statusObject.getTaskTransferNotificationTitle(mTitle, mTask.direction)
+                        val notificationContent = statusObject.getTaskTransferNotificationContent(mTitle, mTask.direction)
                         updateForegroundNotification(mNotificationManager.updateSyncNotification(
-                            title,
+                            notificationTitle,
                             notificationContent,
-                            statusObject.notificationBigText,
+                            statusObject.getTaskTransferNotificationLines(mTitle, mTask.direction),
                             statusObject.notificationPercent,
                             ongoingNotificationID,
                             isPaused

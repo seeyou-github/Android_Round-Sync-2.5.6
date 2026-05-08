@@ -22,6 +22,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
 import android.view.View;
+import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -64,6 +66,7 @@ import ca.pkay.rcloneexplorer.Dialogs.InputDialog;
 import ca.pkay.rcloneexplorer.Dialogs.LoadingDialog;
 import ca.pkay.rcloneexplorer.Fragments.FileExplorerFragment;
 import ca.pkay.rcloneexplorer.Fragments.LogFragment;
+import ca.pkay.rcloneexplorer.Fragments.MainOtherFragment;
 import ca.pkay.rcloneexplorer.Fragments.PermissionFragment;
 import ca.pkay.rcloneexplorer.Fragments.RemotesFragment;
 import ca.pkay.rcloneexplorer.Fragments.TasksFragment;
@@ -87,6 +90,7 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
         RemotesFragment.OnRemoteClickListener,
         RemotesFragment.AddRemoteToNavDrawer,
+        MainOtherFragment.NavigationListener,
         InputDialog.OnPositive {
 
     private static final String TAG = "MainActivity";
@@ -106,6 +110,11 @@ public class MainActivity extends AppCompatActivity
     private Context context;
     private HashMap<Integer, RemoteItem> drawerPinnedRemoteIds;
     private int availableDrawerPinnedRemoteId;
+    private TextView mainSectionTitle;
+    private TextView bottomNavTasks;
+    private TextView bottomNavRemotes;
+    private TextView bottomNavOther;
+    private ImageButton mainAddButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -127,16 +136,17 @@ public class MainActivity extends AppCompatActivity
         availableDrawerPinnedRemoteId = 2;
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
+        toolbar.setTitle("");
         setSupportActionBar(toolbar);
         ActionBar actionbar = getSupportActionBar();
         if (actionbar != null) {
-            actionbar.setDisplayHomeAsUpEnabled(true);
-            actionbar.setHomeAsUpIndicator(R.drawable.ic_menu);
+            actionbar.setDisplayHomeAsUpEnabled(false);
         }
 
         drawer = findViewById(R.id.drawer_layout);
         navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+        setupMainNavigation();
 
         rclone = new Rclone(this);
 
@@ -201,15 +211,21 @@ public class MainActivity extends AppCompatActivity
             startConfigExportFlow();
         }
 
-        findViewById(R.id.navAbout).setOnClickListener(v -> {
+        View navAbout = findViewById(R.id.navAbout);
+        if (navAbout != null) {
+            navAbout.setOnClickListener(v -> {
             Intent aboutIntent = new Intent(this, AboutActivity.class);
             startActivity(aboutIntent);
-        });
+            });
+        }
 
-        findViewById(R.id.navSettings).setOnClickListener(v -> {
+        View navSettings = findViewById(R.id.navSettings);
+        if (navSettings != null) {
+            navSettings.setOnClickListener(v -> {
             Intent settingsIntent = new Intent(this, SettingsActivity.class);
             tryStartActivityForResult(this, settingsIntent, SETTINGS_CODE);
-        });
+            });
+        }
 
         pinRemotesToDrawer();
         updatePermissionFragmentVisibility();
@@ -252,6 +268,52 @@ public class MainActivity extends AppCompatActivity
 
     public void openNavigationDrawer() {
         drawer.openDrawer(GravityCompat.START);
+    }
+
+    private void setupMainNavigation() {
+        mainSectionTitle = findViewById(R.id.main_section_title);
+        mainAddButton = findViewById(R.id.main_add_button);
+        bottomNavTasks = findViewById(R.id.bottom_nav_tasks);
+        bottomNavRemotes = findViewById(R.id.bottom_nav_remotes);
+        bottomNavOther = findViewById(R.id.bottom_nav_other);
+
+        bottomNavTasks.setOnClickListener(v -> startTasksFragment());
+        bottomNavRemotes.setOnClickListener(v -> startRemotesFragment());
+        bottomNavOther.setOnClickListener(v -> startOtherFragment());
+    }
+
+    private void updateMainNavigation(int sectionId) {
+        if (mainSectionTitle == null) {
+            return;
+        }
+        setTitle("");
+        ActionBar actionbar = getSupportActionBar();
+        if (actionbar != null) {
+            actionbar.setDisplayHomeAsUpEnabled(false);
+        }
+        View breadcrumbView = findViewById(R.id.breadcrumb_view);
+        if (breadcrumbView != null) {
+            breadcrumbView.setVisibility(View.GONE);
+        }
+        View searchButton = findViewById(R.id.searchButton);
+        if (searchButton != null) {
+            searchButton.setVisibility(View.GONE);
+        }
+        mainSectionTitle.setText(sectionId);
+        bottomNavTasks.setSelected(sectionId == R.string.tasks);
+        bottomNavRemotes.setSelected(sectionId == R.string.remotes);
+        bottomNavOther.setSelected(sectionId == R.string.other);
+        bottomNavTasks.setAlpha(sectionId == R.string.tasks ? 1.0f : 0.55f);
+        bottomNavRemotes.setAlpha(sectionId == R.string.remotes ? 1.0f : 0.55f);
+        bottomNavOther.setAlpha(sectionId == R.string.other ? 1.0f : 0.55f);
+        mainAddButton.setVisibility(View.VISIBLE);
+        if (sectionId == R.string.tasks) {
+            mainAddButton.setOnClickListener(v -> startActivity(new Intent(this, TaskActivity.class)));
+        } else if (sectionId == R.string.remotes) {
+            mainAddButton.setOnClickListener(v -> startActivity(new Intent(this, RemoteConfig.class)));
+        } else {
+            mainAddButton.setOnClickListener(v -> startActivity(new Intent(this, TriggerActivity.class)));
+        }
     }
 
     @Override
@@ -422,15 +484,23 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void startTasksFragment(){
+        updateMainNavigation(R.string.tasks);
         startFragment(TasksFragment.newInstance());
     }
 
     private void startTriggerFragment() {
+        updateMainNavigation(R.string.other);
         startFragment(TriggerFragment.newInstance());
     }
 
     private void startLogFragment() {
+        updateMainNavigation(R.string.other);
         startFragment(LogFragment.newInstance());
+    }
+
+    private void startOtherFragment() {
+        updateMainNavigation(R.string.other);
+        startFragment(MainOtherFragment.newInstance());
     }
 
     private void startPermissionFragment() {
@@ -481,6 +551,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void startRemotesFragment() {
+        updateMainNavigation(R.string.remotes);
         fragment = RemotesFragment.newInstance();
         FragmentManager fragmentManager = getSupportFragmentManager();
 
@@ -492,6 +563,21 @@ public class MainActivity extends AppCompatActivity
             fragmentManager.beginTransaction().replace(R.id.flFragment, fragment).commitAllowingStateLoss();
         }
         navigationView.setCheckedItem(R.id.nav_remotes);
+    }
+
+    @Override
+    public void onOtherTriggersSelected() {
+        startTriggerFragment();
+    }
+
+    @Override
+    public void onOtherLogsSelected() {
+        startLogFragment();
+    }
+
+    @Override
+    public void onOtherRemotesSelected() {
+        startRemotesFragment();
     }
 
     private void warnUserAboutOverwritingConfiguration() {
@@ -592,6 +678,12 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void startRemote(RemoteItem remote, boolean addToBackStack) {
+        if (mainSectionTitle != null) {
+            mainSectionTitle.setText(remote.getDisplayName());
+        }
+        if (mainAddButton != null) {
+            mainAddButton.setVisibility(View.GONE);
+        }
         fragment = FileExplorerFragment.newInstance(remote);
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         transaction.replace(R.id.flFragment, fragment, FILE_EXPLORER_FRAGMENT_TAG);

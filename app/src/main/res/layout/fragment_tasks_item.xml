@@ -8,8 +8,11 @@
 
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_margin="8dp"
+        android:layout_height="162dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="4dp"
+        android:layout_marginBottom="12dp"
         android:elevation="4dp"
         android:theme="@style/SecondaryCardStyle"
         style="@style/SecondaryCardStyle"
@@ -22,9 +25,9 @@
 
             <ImageView
                 android:id="@+id/taskIcon"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="24dp"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:layout_marginStart="28dp"
                 android:contentDescription="@string/remote_icon"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -33,12 +36,14 @@
 
             <TextView
                 android:id="@+id/taskName"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="24dp"
-                android:layout_marginTop="16dp"
+                android:layout_marginStart="28dp"
+                android:layout_marginTop="32dp"
                 android:fontFamily="sans-serif"
-                android:textSize="16sp"
+                android:singleLine="true"
+                android:textSize="22sp"
+                app:layout_constraintEnd_toStartOf="@+id/task_sync_direction"
                 app:layout_constraintStart_toEndOf="@+id/taskIcon"
                 app:layout_constraintTop_toTopOf="parent"
                 tools:text="Google Drive" />
@@ -49,6 +54,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:text="@string/task_item_label_from"
+                android:textSize="20sp"
                 app:layout_constraintStart_toStartOf="@+id/taskName"
                 app:layout_constraintTop_toBottomOf="@+id/taskName" />
 
@@ -58,6 +64,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="24dp"
                 android:text="@string/task_item_label_to"
+                android:textSize="20sp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="@+id/fromLabel"
                 app:layout_constraintTop_toBottomOf="@+id/fromLabel" />
@@ -83,7 +90,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="32dp"
                 android:text="@string/sync"
-                android:textSize="12sp"
+                android:textSize="18sp"
                 android:textStyle="italic"
                 app:layout_constraintBottom_toBottomOf="@+id/taskName"
                 app:layout_constraintEnd_toStartOf="@+id/file_options"
@@ -113,6 +120,7 @@
                         android:singleLine="true"
                         android:text="fromid"
                         android:textColor="@color/textColorHighlight"
+                        android:textSize="20sp"
                         android:textStyle="italic"
                         tools:ignore="HardcodedText" />
 
@@ -122,6 +130,7 @@
                         android:layout_height="wrap_content"
                         android:singleLine="true"
                         android:text="fromPath"
+                        android:textSize="20sp"
                         tools:ignore="HardcodedText" />
 
                 </LinearLayout>
@@ -141,6 +150,7 @@
                         android:text="toid"
                         android:textAllCaps="false"
                         android:textColor="@color/textColorHighlight"
+                        android:textSize="20sp"
                         android:textStyle="italic"
                         tools:ignore="HardcodedText" />
 
@@ -150,6 +160,7 @@
                         android:layout_height="wrap_content"
                         android:singleLine="true"
                         android:text="toPath"
+                        android:textSize="20sp"
                         tools:ignore="HardcodedText" />
 
                 </LinearLayout>

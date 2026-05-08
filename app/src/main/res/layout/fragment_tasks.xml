@@ -72,7 +72,10 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
-            android:paddingBottom="88dp"
+            android:paddingStart="10dp"
+            android:paddingTop="24dp"
+            android:paddingEnd="10dp"
+            android:paddingBottom="112dp"
             tools:listitem="@layout/fragment_tasks_item">
 
         </androidx.recyclerview.widget.RecyclerView>
@@ -86,6 +89,7 @@
             android:clickable="true"
             android:contentDescription="@string/add_task"
             android:focusable="true"
+            android:visibility="gone"
             android:src="@drawable/ic_add"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />

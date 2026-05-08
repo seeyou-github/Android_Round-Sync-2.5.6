@@ -4,6 +4,7 @@
                                                      xmlns:tools="http://schemas.android.com/tools"
                                                      android:layout_width="match_parent"
                                                      android:layout_height="match_parent"
+                                                     android:background="?attr/colorSurface"
                                                      tools:context="ca.pkay.rcloneexplorer.Activities.MainActivity">
 
 
@@ -12,88 +13,82 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:animateLayoutChanges="false"
-        android:background="@android:color/transparent"
-        android:paddingStart="6dp"
-        android:paddingEnd="6dp"
+        android:background="?attr/colorSurfaceVariant"
         app:elevation="0dp">
 
-        <FrameLayout
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:animateLayoutChanges="false">
+            android:layout_height="88dp"
+            android:background="?attr/colorSurfaceVariant"
+            android:minHeight="88dp"
+            android:paddingStart="28dp"
+            android:paddingEnd="28dp"
+            app:contentInsetStartWithNavigation="0dp"
+            app:contentInsetStart="0dp"
+            app:titleMarginStart="0dp">
 
-            <com.google.android.material.card.MaterialCardView
-                style="@style/MainViewToolbar"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="4dp"
-                android:animateLayoutChanges="false"
-                android:theme="@style/MainViewToolbar"
-                app:cardCornerRadius="@dimen/cardCornerRadius"
-                app:cardElevation="2dp"
-                app:strokeWidth="0dp">
+                android:layout_height="match_parent"
+                android:baselineAligned="false"
+                android:orientation="horizontal">
 
-                <androidx.appcompat.widget.Toolbar
-                    android:id="@+id/toolbar"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:animateLayoutChanges="false"
-                    android:orientation="horizontal"
-                    android:theme="@style/MainViewToolbar">
+                <TextView
+                    android:id="@+id/main_section_title"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:includeFontPadding="false"
+                    android:text="@string/remotes"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="34sp"
+                    android:textStyle="bold"
+                    tools:text="远程" />
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:animateLayoutChanges="false"
-                        android:orientation="horizontal"
-                        android:visibility="visible">
+                <ImageButton
+                    android:id="@+id/main_add_button"
+                    android:layout_width="64dp"
+                    android:layout_height="match_parent"
+                    android:background="?selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/add_task"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_add"
+                    app:tint="?attr/colorOnSurface" />
+            </LinearLayout>
 
-                        <LinearLayout
-                            android:id="@+id/search_bar"
-                            android:layout_width="wrap_content"
-                            android:layout_height="match_parent"
-                            android:layout_weight="4"
-                            android:visibility="invisible">
+            <LinearLayout
+                android:id="@+id/search_bar"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:visibility="gone">
 
-                            <EditText
-                                android:id="@+id/search_field"
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:layout_marginStart="0dp"
-                                android:layout_marginEnd="0dp"
-                                android:layout_weight="1"
-                                android:ellipsize="end"
-                                android:hint="@string/search"
-                                android:imeOptions="actionSearch"
-                                android:inputType="text"
-                                android:lines="1"
-                                android:textColor="@color/white"
-                                android:importantForAutofill="no" />
+                <EditText
+                    android:id="@+id/search_field"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:importantForAutofill="no" />
 
-                            <ImageButton
-                                android:id="@+id/search_clear"
-                                android:layout_width="48dp"
-                                android:layout_height="48dp"
-                                android:layout_marginEnd="0dp"
-                                android:background="@android:color/transparent"
-                                android:contentDescription="@string/search_clear_button"
-                                android:src="@drawable/ic_cancel" />
-                        </LinearLayout>
+                <ImageButton
+                    android:id="@+id/search_clear"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:background="@android:color/transparent"
+                    android:contentDescription="@string/search_clear_button"
+                    android:src="@drawable/ic_cancel" />
+            </LinearLayout>
 
-                        <ImageButton
-                            android:id="@+id/searchButton"
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
-                            android:background="@android:color/transparent"
-                            android:contentDescription="@string/search"
-                            android:visibility="invisible"
-                            app:srcCompat="@drawable/ic_search" />
-
-                    </LinearLayout>
-                </androidx.appcompat.widget.Toolbar>
-
-            </com.google.android.material.card.MaterialCardView>
-        </FrameLayout>
+            <ImageButton
+                android:id="@+id/searchButton"
+                android:layout_width="64dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="end"
+                android:background="@android:color/transparent"
+                android:contentDescription="@string/search"
+                android:visibility="gone"
+                app:srcCompat="@drawable/ic_search" />
+        </androidx.appcompat.widget.Toolbar>
 
         <de.felixnuesse.ui.BreadcrumbView
             android:id="@+id/breadcrumb_view"
@@ -128,5 +123,48 @@
     <include layout="@layout/content_main" />
 
     <include layout="@layout/locked_config" />
+
+    <LinearLayout
+        android:id="@+id/main_bottom_nav"
+        android:layout_width="match_parent"
+        android:layout_height="96dp"
+        android:layout_gravity="bottom"
+        android:background="?attr/colorSurfaceVariant"
+        android:baselineAligned="false"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/bottom_nav_tasks"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/tasks"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textSize="32sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/bottom_nav_remotes"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/remotes"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textSize="32sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/bottom_nav_other"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/other"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textSize="32sp"
+            android:textStyle="bold" />
+    </LinearLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

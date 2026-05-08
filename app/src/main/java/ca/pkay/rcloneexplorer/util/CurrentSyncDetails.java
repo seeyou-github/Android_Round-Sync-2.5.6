@@ -20,6 +20,7 @@ import java.util.Locale;
 public class CurrentSyncDetails {
 
     private static final int MAX_LINES = 1200;
+    private static final StringBuilder SESSION_LOG = new StringBuilder();
     private static final String[] DIFFERENCE_KEYWORDS = new String[]{
             "delete", "deleted", "deleting", "remove", "removed", "purge",
             "copy", "copied", "copying", "upload", "uploaded", "uploading",
@@ -28,6 +29,7 @@ public class CurrentSyncDetails {
     };
 
     public static synchronized void clear(Context context) {
+        SESSION_LOG.setLength(0);
         Log2File.delete(context, Log2File.SYNC_LOG_FILE_NAME);
         File legacyFile = getLegacyFile(context);
         if (legacyFile.exists()) {
@@ -39,11 +41,7 @@ public class CurrentSyncDetails {
         if (line == null || line.trim().isEmpty()) {
             return;
         }
-        try {
-            Log2File.append(context, Log2File.SYNC_LOG_FILE_NAME, line + System.lineSeparator());
-        } catch (IOException e) {
-            FLog.e("CurrentSyncDetails", "Could not append sync details", e);
-        }
+        SESSION_LOG.append(line).append(System.lineSeparator());
     }
 
     public static synchronized void appendRcloneLine(Context context, String line) {
@@ -54,11 +52,26 @@ public class CurrentSyncDetails {
     }
 
     public static synchronized String read(Context context) {
+        if (SESSION_LOG.length() > 0) {
+            return SESSION_LOG.toString();
+        }
         String output = Log2File.read(context, Log2File.SYNC_LOG_FILE_NAME);
         if (output.isEmpty() && Log2File.getConfiguredLogLocation(context) == null) {
             output = readLegacy(context);
         }
         return output;
+    }
+
+    public static synchronized void save(Context context) {
+        if (SESSION_LOG.length() == 0) {
+            return;
+        }
+        try {
+            Log2File.write(context, Log2File.SYNC_LOG_FILE_NAME, SESSION_LOG.toString());
+            SESSION_LOG.setLength(0);
+        } catch (IOException e) {
+            FLog.e("CurrentSyncDetails", "Could not save sync log", e);
+        }
     }
 
     public static synchronized ArrayList<String> readLines(Context context) {

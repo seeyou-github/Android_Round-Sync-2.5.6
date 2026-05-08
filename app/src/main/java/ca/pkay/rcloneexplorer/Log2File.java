@@ -26,7 +26,8 @@ import java.nio.charset.StandardCharsets;
 public class Log2File {
 
     private static final String TAG = "Log2File";
-    private static final String LOG_MIME_TYPE = "text/plain";
+    private static final String LOG_MIME_TYPE = "application/octet-stream";
+    private static final String LOG_LOCATION_TEST_FILE_NAME = ".round_sync_log_test";
     public static final String SYNC_LOG_FILE_NAME = "sync.log";
 
     public static class WriteLogMessage extends AsyncTask<Void, Void, Void> {
@@ -66,7 +67,8 @@ public class Log2File {
 
     public static boolean testLogLocation(Context context, Uri treeUri) {
         try {
-            writeToTree(context, treeUri, SYNC_LOG_FILE_NAME, "Round Sync log location test\n");
+            writeToTree(context, treeUri, LOG_LOCATION_TEST_FILE_NAME, "Round Sync log location test\n", false);
+            deleteMatchingLogFiles(context, treeUri, LOG_LOCATION_TEST_FILE_NAME);
             return true;
         } catch (IOException | RuntimeException e) {
             FLog.e(TAG, "Could not test log file location", e);
@@ -87,6 +89,20 @@ public class Log2File {
             logFile.delete();
         }
         try (FileOutputStream stream = new FileOutputStream(logFile, true)) {
+            stream.write(logMessage.getBytes(StandardCharsets.UTF_8));
+        }
+    }
+
+    public static synchronized void write(Context context, String fileName, String logMessage) throws IOException {
+        Uri logLocation = getConfiguredLogLocation(context);
+        if (logLocation != null) {
+            deleteMatchingLogFiles(context, logLocation, fileName);
+            writeToTree(context, logLocation, fileName, logMessage, false);
+            return;
+        }
+
+        File logFile = getPrivateLogFile(context, fileName);
+        try (FileOutputStream stream = new FileOutputStream(logFile, false)) {
             stream.write(logMessage.getBytes(StandardCharsets.UTF_8));
         }
     }
@@ -124,10 +140,7 @@ public class Log2File {
         Uri logLocation = getConfiguredLogLocation(context);
         if (logLocation != null) {
             try {
-                Uri fileUri = findLogFile(context, logLocation, fileName);
-                if (fileUri != null) {
-                    DocumentsContract.deleteDocument(context.getContentResolver(), fileUri);
-                }
+                deleteMatchingLogFiles(context, logLocation, fileName);
                 return;
             } catch (IOException | RuntimeException e) {
                 FLog.e(TAG, "Could not delete configured log file", e);
@@ -175,8 +188,12 @@ public class Log2File {
     }
 
     private static void writeToTree(Context context, Uri treeUri, String fileName, String logMessage) throws IOException {
+        writeToTree(context, treeUri, fileName, logMessage, true);
+    }
+
+    private static void writeToTree(Context context, Uri treeUri, String fileName, String logMessage, boolean append) throws IOException {
         Uri logUri = findOrCreateLogFile(context, treeUri, fileName);
-        try (OutputStream stream = context.getContentResolver().openOutputStream(logUri, "wa")) {
+        try (OutputStream stream = context.getContentResolver().openOutputStream(logUri, append ? "wa" : "wt")) {
             if (stream == null) {
                 throw new IOException("Could not open log file");
             }
@@ -215,12 +232,44 @@ public class Log2File {
                 int idIndex = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DOCUMENT_ID);
                 int nameIndex = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DISPLAY_NAME);
                 while (cursor.moveToNext()) {
-                    if (fileName.equals(cursor.getString(nameIndex))) {
+                    String displayName = cursor.getString(nameIndex);
+                    if (isMatchingLogFileName(displayName, fileName)) {
                         return DocumentsContract.buildDocumentUriUsingTree(treeUri, cursor.getString(idIndex));
                     }
                 }
             }
         }
         return null;
+    }
+
+    private static void deleteMatchingLogFiles(Context context, Uri treeUri, String fileName) throws IOException {
+        ContentResolver resolver = context.getContentResolver();
+        Uri childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(
+                treeUri,
+                DocumentsContract.getTreeDocumentId(treeUri)
+        );
+        String[] projection = new String[]{
+                DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+                DocumentsContract.Document.COLUMN_DISPLAY_NAME
+        };
+        try (Cursor cursor = resolver.query(childrenUri, projection, null, null, null)) {
+            if (cursor != null) {
+                int idIndex = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DOCUMENT_ID);
+                int nameIndex = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DISPLAY_NAME);
+                while (cursor.moveToNext()) {
+                    String displayName = cursor.getString(nameIndex);
+                    if (isMatchingLogFileName(displayName, fileName)) {
+                        Uri fileUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, cursor.getString(idIndex));
+                        DocumentsContract.deleteDocument(resolver, fileUri);
+                    }
+                }
+            }
+        }
+    }
+
+    private static boolean isMatchingLogFileName(String displayName, String fileName) {
+        return fileName.equals(displayName)
+                || (fileName + ".txt").equals(displayName)
+                || displayName.startsWith(fileName + " (");
     }
 }

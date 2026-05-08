@@ -145,6 +145,7 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
         } catch (e: IllegalArgumentException) {
             FLog.e(TAG, "Receiver already unregistered", e)
         }
+        CurrentSyncDetails.save(mContext)
         postSync()
     }
 
@@ -217,6 +218,7 @@ class SyncWorker (private var mContext: Context, workerParams: WorkerParameters)
         } else {
             log("Sync: No Rclone Process!")
         }
+        CurrentSyncDetails.save(mContext)
         mNotificationManager.cancelSyncNotification(ongoingNotificationID)
     }
 
